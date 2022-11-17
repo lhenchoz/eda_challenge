@@ -258,7 +258,7 @@ Erstelle Datumsvariablen für Reservation und Ankunft aufgrund der Informationen
 Hinweis: Verwende für deine Implementierung die library `lubridate` und Informationen aus [R for Data Science, Chapter "Dates and times"](https://r4ds.had.co.nz/dates-and-times.html) sowie die Posts [Umgang mit Datumsinformationen](https://spaces.technik.fhnw.ch/spaces/explorative-datenanalyse/beitraege/umgang-mit-datumsinformationen) und [Umgang mit textuellen Daten mit tidyverse's stringr](https://spaces.technik.fhnw.ch/spaces/explorative-datenanalyse/beitraege/umgang-mit-textuellen-daten-mit-tidyverses-stringr).
 
 ```{r}
-
+df_bookings <- df_bookings %>% mutate(ArrivalDate = ymd(str_c(ArrivalDateYear, ArrivalDateMonth, ArrivalDateDayOfMonth, sep = "-")), .keep = 'unused')
 ```
 
 ## Aufgabe (3 Punkte): Bilde Faktoren
