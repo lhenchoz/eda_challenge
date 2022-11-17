@@ -204,7 +204,11 @@ df_bookings <- df_bookings %>%
 Untersuche allfällige fehlende Informationen (NAs) im Data Frame und zähle wieviele NAs vorkommen.
 
 ```{r}
-df_bookings %>% filter(!complete.cases(.)) %>% count()
+#Unvollständige Observationen
+df_bookings %>%  filter(!complete.cases(.))
+
+#Anzahl NAs
+df_bookings %>% is.na %>% sum()
 ```
 
 ## Aufgabe (3 Punkte): Ersetze "NULL" Werte
@@ -258,7 +262,7 @@ Erstelle Datumsvariablen für Reservation und Ankunft aufgrund der Informationen
 Hinweis: Verwende für deine Implementierung die library `lubridate` und Informationen aus [R for Data Science, Chapter "Dates and times"](https://r4ds.had.co.nz/dates-and-times.html) sowie die Posts [Umgang mit Datumsinformationen](https://spaces.technik.fhnw.ch/spaces/explorative-datenanalyse/beitraege/umgang-mit-datumsinformationen) und [Umgang mit textuellen Daten mit tidyverse's stringr](https://spaces.technik.fhnw.ch/spaces/explorative-datenanalyse/beitraege/umgang-mit-textuellen-daten-mit-tidyverses-stringr).
 
 ```{r}
-df_bookings <- df_bookings %>% mutate(ArrivalDate = ymd(str_c(ArrivalDateYear, ArrivalDateMonth, ArrivalDateDayOfMonth, sep = "-")), .keep = 'unused')
+df_bookings <- df_bookings %>% mutate(ArrivalDate = ymd(str_c(ArrivalDateYear, ArrivalDateMonth, ArrivalDateDayOfMonth, sep = "-")), .keep = 'unused', ReservationStatusDate = ymd(ReservationStatusDate))
 ```
 
 ## Aufgabe (3 Punkte): Bilde Faktoren
@@ -268,7 +272,7 @@ Konvertiere sämtliche kategorialen Variablen und mache daraus Faktoren und übe
 Hinweis: Verwende für deine Implementierung `across()` und eine bestehende R Basis-Funktion zur Prüfung der erfolgreichen Bildung der Faktoren.
 
 ```{r}
-df_bookings <- df_bookings %>% mutate(across(c('BookingCancelled', 'Meal', 'MarketSegment', 'DistributionChannel', 'IsRepeatedGuest', 'ReservedRoomType', 'AssignedRoomType', 'DepositType', 'CustomerType', 'ReservationStatus'), as.factor))
+df_bookings <- df_bookings %>% mutate(across(c('BookingCancelled', 'Meal', 'Country', 'MarketSegment', 'DistributionChannel', 'IsRepeatedGuest', 'ReservedRoomType', 'AssignedRoomType', 'DepositType', 'Agent', 'Company', 'CustomerType', 'ReservationStatus'), as.factor))
 typeof(df_bookings$BookingCancelled)
 typeof(df_bookings$DepositType)
 ```
@@ -298,7 +302,15 @@ sowie den Haushaltstyp (neue Faktor-Variable "HouseholdType"):
 -   "Group" definiert als Buchung für mehr als zwei Erwachsene (mit oder ohne Kinder / Babies),
 
 ```{r}
+df_bookings <- df_bookings %>% mutate(TotalNights = StaysInWeekNights + StaysInWeekendNights, GroupSize = Adults + Children, Price = AverageDailyRate * TotalNights)
 
+
+
+df_bookings <- df_bookings %>% mutate(StayType = case_when(TotalNights > 7 ~ 'Long stay',
+                                                           TotalNights == 7 ~ 'Full week',
+                                                           TotalNights < 7 & StaysInWeekendNights == 0 ~ 'Week stay',
+                                                           StaysInWeekendNights == 1 ~ 'Weekend only',
+                                                           StaysInWeekendNights == 2 ~ 'Long weekend')) %>% mutate(StayType = as.factor(StayType))
 ```
 
 # Summarische Statistiken erzeugen
