@@ -1,0 +1,512 @@
+---
+title: "EDA HS22 - Mini-Challenge: Hotelbuchungen"
+output:
+  html_document:
+    toc: yes
+    toc_depth: '4'
+    df_print: paged
+    toc_float: true
+  html_notebook:
+    toc: yes
+    toc_depth: 4
+    df_print: paged
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+    theme: united
+    highlight: tango
+    code_folding: hide
+---
+
+------------------------------------------------------------------------
+
+ 
+
+**Beginn: 15.11.2022, 08:15**
+
+**Ende: 25.11.2022, 23:59**
+
+ 
+
+**Abgabe: Pro Zweiergruppe ein .Rmd und .html File via e-mail an [daniel.perruchoud\@fhnw.ch](mailto:daniel.perruchoud@fhnw.ch){.email}**
+
+ 
+
+**Vorname, Name:**
+
+Noah, Recher
+
+**Vorname, Name:**
+
+Logan, Henchoz
+
+**Erreichte Punktzahl:**
+
+ 
+
+**Note:**
+
+ 
+
+**Hiermit erklären wir, dass die vorliegende Arbeit selbständig und ohne Hilfe weiterer Personen erarbeitet und geschrieben wurde und auch nicht an andere Personen weitergereicht wurde und wird.**
+
+------------------------------------------------------------------------
+
+# Einführung
+
+## Beurteilungskriterien
+
+Beurteilt werden Umfang, Inhalt und Form der Abgabe jeder Gruppe; die pro Aufgabe erworbenen Punktezahl bestimmt sich aus Vollständigkeit, Korrektheit der Analyse sowie Qualität der Codierung.
+
+Die **maximale** Anzahl möglicher Punkte ist hinter jeder Aufgabe vermerkt.
+
+Sprache: Empfohlen ist in den Codes, Grafiken und Tabellen konsistent Englisch zu verwenden, damit die Namen der Attribute nicht übersetzt werden müssen.
+
+Visualisierung: Bitte achtet darauf, dass alle Grafiken übersichtlich und vollständig beschriftet und koloriert sind und die Art der verwendeten Grafik entsprechend dem Datentyp sinnvoll gewählt ist.
+
+Dokumentation: Kommentiert eure Codes, wo spezielle Überlegung einfliessen und beschreibt die Resulate der Analysen in wenigen Sätzen präzise.
+
+## Datenbeschreibung
+
+Ihr erhaltet Daten von 40'060 Hotelbuchungen und den Auftrag diese zu analysieren. Pro Buchung stehen die folgenden 31 Attribute zur Verfügung (zusammengehörende Attribute werden gemeinsam beschrieben).
+
+1.  IsCanceled: Information, ob die Buchung storniert wurde,
+2.  LeadTime: Anzahl Tage zwischen Buchung und Eintreffen im Hotel,
+3.  ArrivalDateYear, -Month, -DateWeekNumber, DateDayOfMonth: Information zum Zeitpunkt des Eintreffens im Hotel,
+4.  StaysInWeekendNights, StaysInWeekNights: Anzahl gebuchter Nächte am Wochenende, bzw. an Werktagen,
+5.  Adults, Children, Babies: Anzahl Erwachsene, Kinder und Babies pro Buchung,
+6.  Meal: Art des gebuchten Verpflegungen, d.h. BB (Bed & Breakfast), HB (Half board oder Halbpension), FB (Full board oder Vollpension), Undefined (kein Paket),
+7.  Country: Herkunftsland des Gastes,
+8.  MarketSegment: Marktsegment der Buchung, wie z.B. Geschäftskunde, Direktkunde, Gruppe (TA = Tour Agents, TO = Tour Operators),
+9.  DistributionChannel: Vertriebskanal der Buchung (TA = Tour Agents, TO = Tour Operators),
+10. IsRepeatedGuest: Information, ob die Buchung einem früheren Gast zugewiesen werden kann,
+11. PreviousCancellations: Information zur Anzahl früherer Stornierungen des Gastes,
+12. PreviousBookingsNotCanceled: Information zur Anzahl früherer Buchung des Gastes ohne Stornierung,
+13. ReservedRoomType / AssignedRoomType: reservierter Zimmertyp, bzw. tatsächlich bezogener Zimmertyp,
+14. BookingChanges: Anzahl Anpassungen der Buchung bis zum Check-In bzw. bis zur Stornierung,
+15. DepositType: Art der bei Buchung hinterlegten Sicherheit. Non-Refundable bedeutet der Gesamtbetrag wurde bezahlt und kann nicht zurückgefordert werden, Refundable bedeutet ein Teilbetrag wurde bezahlt und kann zurückgefordert werden,
+16. Agent / Company: Agentur bzw. Firma, welche die Buchung durchgeführt hat,
+17. DaysInWaitingList: Anzahl Tage bis der Gast die Bestätigung für die Buchung erhalten hat,
+18. CustomerType: Kundenart des Gastes,
+19. ADR: Average Daily Rate in EURO, d.h. durchschnittlich bezahlter Preis pro Übernachtung
+20. RequiredCarParkingSpaces: Anzahl für den Gast benötigter Parkplätze,
+21. TotalOfSpecialRequests: Anzahl spezieller Anfragen des Gastes (z.B. Kinderbett, Doppelbett),
+22. ReservationStatus: letzter Status der Buchung (Check-Out, No-Show, Canceled),
+23. ReservationStatusDate: letzter Statusänderung der Buchung.
+
+# Analysen vorbereiten
+
+## Aufgabe (1 Punkt): Lade die Analyse-Pakete
+
+Lade die für die Analysen relevanten Pakete.
+
+Hinweis: Verwende für deine Implementierung `tidyverse`, für Zeitreihenanalyse `lubridate` und zusätzlich `ggmosaic` und `knitr`.
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(ggmosaic)
+library(knitr)
+library(stringi)
+```
+
+# Daten laden und inspizieren
+
+## Aufgabe (1 Punkt): Lade die Daten
+
+Lade die zu analysierenden Daten.
+
+Hinweis: Verwende für deine Implementierung die Funktion `read.csv()` und das File "H1.csv".
+
+```{r}
+df_bookings_raw <- read.csv("./H1.csv")
+```
+
+## Aufgabe (1 Punkt): Untersuche die Grösse des Data Frames
+
+Gib für die eingelesenen Daten die Anzahl Beobachtungen und Attribute aus.
+
+```{r}
+nrow(df_bookings_raw)
+ncol(df_bookings_raw)
+```
+
+## Aufgabe (1 Punkt): Inspiziere die Dateninhalte
+
+Gib eine Zufallsstichprobe von 5 Beobachtungen aus (verwende als Seed die Zahl 4711) und verschafffe dir einen Überblick über die Daten.
+
+```{r}
+set.seed(4711)
+sample_n(df_bookings_raw, 5)
+```
+
+## Aufgabe (1 Punkt): Untersuche Struktur und Datentypen
+
+Gib die Struktur des Data Frames aus und verschaffe dir einen Überblick über die Datentypen.
+
+```{r}
+str(df_bookings_raw)
+```
+
+## Aufgabe (2 Punkte): Identifiziere Duplikate
+
+Bestimme wieviele doppelte Beobachtungen im Data Frame auftauchen.
+
+Hinweis: Aufgrund fehlender Hintergrundinformationen werden für die nächsten Schritte zunächst keine Beobachtungen entfernt, auch wenn im Datensatz viel redundante Informationen vorhanden sind!
+
+```{r}
+df_bookings_raw %>% filter(duplicated(df_bookings_raw)) %>% summarise(n_duplicate = n())
+```
+
+## Aufgabe (10 Punkte): Identifiziere Gruppen doppelter Beobachtungen
+
+Doppelte Beobachtungen treten im vorliegenden Datensatz in unterschiedlicher Gruppierung auf: es gibt Beobachtungen, die nur zweimal, aber auch Beobachtungen, die mehr als ein Dutzend mal vorhanden sind. Gib für die vier Gruppierungen mit den meisten doppelten Beobachtungen je eine vollständige Beobachtung aus.
+
+Hinweis: Aufgrund fehlender Hintergrundinformationen werden für die nächsten Schritte zunächst keine Beobachtungen entfernt, auch wenn im Datensatz viel redundante Informationen vorhanden sind!
+
+```{r}
+df_bookings_raw %>%
+  add_count(across(everything()), sort = TRUE, name = "Number_of_duplicates") %>% filter(Number_of_duplicates>1) %>% distinct() %>% head(4)
+```
+
+# Daten transformieren
+
+## Aufgabe (2 Punkte): Benenne Attribute um
+
+Die folgenden Attribute sind neu zu benennen (alterName -\> neuerName)
+
+-   TotalOfSpecialRequests -\> TotalSpecialRequests
+-   ADR -\> AverageDailyRate
+-   IsCanceled -\> BookingCancelled
+
+```{r}
+df_bookings <- df_bookings_raw %>% 
+  rename(
+    TotalSpecialRequests = TotalOfSpecialRequests,
+    AverageDailyRate = ADR,
+    BookingCancelled = IsCanceled
+  )
+```
+
+## Aufgabe (2 Punkte): Entferne Leerzeichen
+
+Entferne *gleichzeitig für alle* character-wertigen Attribute, die Leerzeichen, welche vor oder nach dem Text auftauchen.
+
+Hinweis: Verwende für deine Implementierung die Funktion `across()` und den Post [Umgang mit textuellen Daten mit tidyverse's stringr](https://spaces.technik.fhnw.ch/spaces/explorative-datenanalyse/beitraege/umgang-mit-textuellen-daten-mit-tidyverses-stringr).
+
+```{r}
+df_bookings <- df_bookings %>% 
+  mutate(across(where(is.character), str_trim))
+```
+
+## Aufgabe (2 Punkte): Untersuche fehlende Informationen
+
+Untersuche allfällige fehlende Informationen (NAs) im Data Frame und zähle wieviele NAs vorkommen.
+
+```{r}
+df_bookings %>% filter(!complete.cases(.)) %>% count()
+```
+
+## Aufgabe (3 Punkte): Ersetze "NULL" Werte
+
+Ersetze *gleichzeitig alle* Werte "NULL" für die Attribute "Company" und "Agent" durch `NA` und und zähle wieviele NAs in jedem der beiden Attributen vorkommen.
+
+```{r}
+df_bookings <- df_bookings %>%
+   mutate(across(c("Company", "Agent"), ~na_if(., "NULL")))
+sum(is.na(df_bookings$Company))
+sum(is.na(df_bookings$Agent))
+```
+
+## Aufgabe (4 Punkte): Ersetze Abkürzungen
+
+Ersetze *gleichzeitig* für die Attribute "MarketSegment" und "DistributionChannel" die Abkürzungen
+
+-   "TA" durch "Tour Agent",
+-   "TO" durch "Tour Operator".
+
+Hinweis: Verwende für deine Implementierung die Funktion `gsub()` oder Ähnliches.
+
+```{r}
+df_bookings <- df_bookings %>% mutate_at(vars(c('MarketSegment', 'DistributionChannel')), ~ str_replace_all(., c('TO' = 'Tour Operator', 'TA' = 'Tour Agent')))
+```
+
+## Aufgabe (4 Punkte): Ersetze weitere Abkürzungen
+
+Ersetze für das Attribut "Meal" die verwendeten Abkürzungen
+
+-   "BB" durch "Bed & Breakfast",
+-   "HB" durch "Half board",
+-   "FB" durch "Full board",
+-   "Undefined" durch "kein Paket".
+
+Ersetze weiter für die Attribute "BookingCancelled" und "IsRepeatedGuest" die Werte 1 durch "Yes" und 0 durch "No".
+
+```{r}
+df_bookings$Meal <- gsub('BB', 'Bed & Breakfast',
+          gsub('HB', 'Half board',
+            gsub('FB', 'Full board',
+              gsub('Undefined', 'kein Paket', df_bookings$Meal))))
+
+df_bookings <- df_bookings %>% mutate_at(vars(c('BookingCancelled', 'IsRepeatedGuest')), ~ str_replace_all(., c('1' = 'Yes', '0' = 'No')))
+```
+
+## Aufgabe (6 Punkte): Erstelle Datumsvariablen
+
+Erstelle Datumsvariablen für Reservation und Ankunft aufgrund der Informationen "ReservationStatusDate" bzw. "ArrivalDateYear", "ArrivalDateYear", "ArrivalDateDayOfMonth".
+
+Hinweis: Verwende für deine Implementierung die library `lubridate` und Informationen aus [R for Data Science, Chapter "Dates and times"](https://r4ds.had.co.nz/dates-and-times.html) sowie die Posts [Umgang mit Datumsinformationen](https://spaces.technik.fhnw.ch/spaces/explorative-datenanalyse/beitraege/umgang-mit-datumsinformationen) und [Umgang mit textuellen Daten mit tidyverse's stringr](https://spaces.technik.fhnw.ch/spaces/explorative-datenanalyse/beitraege/umgang-mit-textuellen-daten-mit-tidyverses-stringr).
+
+```{r}
+
+```
+
+## Aufgabe (3 Punkte): Bilde Faktoren
+
+Konvertiere sämtliche kategorialen Variablen und mache daraus Faktoren und überprüfe die Datentypen der konvertierten Variablen für die Variablen "BookingCancelled" und "DepositType".
+
+Hinweis: Verwende für deine Implementierung `across()` und eine bestehende R Basis-Funktion zur Prüfung der erfolgreichen Bildung der Faktoren.
+
+```{r}
+df_bookings <- df_bookings %>% mutate(across(c('BookingCancelled', 'Meal', 'MarketSegment', 'DistributionChannel', 'IsRepeatedGuest', 'ReservedRoomType', 'AssignedRoomType', 'DepositType', 'CustomerType', 'ReservationStatus'), as.factor))
+typeof(df_bookings$BookingCancelled)
+typeof(df_bookings$DepositType)
+```
+
+## Aufgabe (7 Punkte): Erstelle neue Variablen
+
+Erstelle neue Variablen, welche Auskunft geben über
+
+-   die Anzahl Logiernächte pro Buchung -\> neue Variable "TotalNights" als Summe der Anzahl Nächte an Wochentagen ("StaysInWeekNights) und Wochenendtagen ("StaysInWeekendNights"),
+-   die Anzahl Personen pro Buchung -\> neue Variable "GroupSize" als Summe von "Adults", "Children" und "Babies",
+-   den bezahlte Preis pro Aufenthalt -\> neue Variable "Price" gebildet als Produkt von "AverageDailyRate" und "TotalNights".
+
+Erstelle daraus abgeleitet weitere Attribute für die Art des Aufenthalts (neue Faktor-Variable "StayType"):
+
+-   "Long stay" definiert als Aufenthalt von mehr als 7 Nächten,
+-   "Full week" definiert als Aufenthalt von 7 Nächten,
+-   "Week stay" definiert als Aufenthalt von weniger als 7 Tagen ohne Wochenendübernachtungen,
+-   "Weeked only" definiert als eintägiger Aufenthalt mit einer Wochenendübernachtung,
+-   "Long weekend" definiert als zweitägiger Aufenthalt mit zwei Wochenendübernachtungen,
+
+sowie den Haushaltstyp (neue Faktor-Variable "HouseholdType"):
+
+-   "Single" definiert als Buchung für genau eine Erwachsene,
+-   "Couple" definiert als Buchung für genau zwei Erwachsene,
+-   "Single Parent" definiert als Buchung für eine Erwachsene und ein oder mehrere Kinder oder Babies,
+-   "Family" definiert als Buchung für zwei Erwachsene und ein oder mehrere Kinder oder Babies,
+-   "Group" definiert als Buchung für mehr als zwei Erwachsene (mit oder ohne Kinder / Babies),
+
+```{r}
+
+```
+
+# Summarische Statistiken erzeugen
+
+## Aufgabe (3 Punkte): Erstelle Häufigkeitstabellen
+
+Gib für die beiden oben bearbeiteten Attribute "MarketSegment" und "DistributionChannel" je eine separate Häufigkeitstabelle aus.
+
+Hinweis: Verwende für deine Implementierung nur **einen** Aufruf der Funktion `summary()`.
+
+```{r}
+
+```
+
+## Aufgabe (3 Punkte): Erstelle weitere Häufigkeitstabellen
+
+Gib für die Attribute "Meal" und "IsRepeatedGuest" separat tabellarische Häufigkeitsverteilungen aus.
+
+Hinweis: Verwende für deine Implementierung die Funktion `kable()`.
+
+```{r}
+
+```
+
+## Aufgabe (5 Punkte): Erstelle weitere Häufigkeitstabellen
+
+Erstelle eine summarische, univariate Statistik für alle Attribute und dokumentiere kurz allfällige Besonderheiten.
+
+```{r}
+
+```
+
+## Aufgabe (4 Punkte): Prüfe Auffälligkeiten
+
+Erstelle eine tabellarische Häufigkeitsverteilung für das neu gebildete Attribut "HouseholdType" und untersuche und beschreibe Auffälligkeiten.
+
+Hinweis: Verwende für deine Implementierung die Funktion `kable()`.
+
+```{r}
+
+```
+
+## Aufgabe (3 Punkte): Prüfe weitere Auffälligkeiten
+
+Erstelle eine Statistik für das Attribut "AverageDailyRate" und identifiziere Auffälligkeiten.
+
+```{r}
+
+```
+
+## Aufgabe (2 Punkte): Erstelle einen bereinigten Datensatz
+
+Bereinige das Data Frame, indem du Beobachtungen mit Auffälligkeiten und unplausiblen Werten in den Attributen "AverageDailyRate" und "HouseholdType" entfernst.
+
+ 
+
+**FÜR ALLE WEITEREN ANALYSEN IST AUSSCHLIESSLICH DER BEREINIGTE DATENSATZ ZU VERWENDEN!!!**
+
+```{r}
+
+```
+
+# Visualisierung
+
+**FÜR ALLE WEITEREN ANALYSEN IST AUSSCHLIESSLICH DER BEREINIGTE DATENSATZ ZU VERWENDEN!!!**
+
+## Aufgabe (5 Punkte): Analysiere Zusammenhänge kategorialer Grössen
+
+Erstelle eine graphische Analyse, welche die relativen Unterschiede des Auftretens von Spezialwünschen (s. "TotalSpecialRequests") bei Hotelreservationen nach Haushaltstyp (s. "HouseholdType") untersucht und zusätzlich betrachtet, ob die Buchung storniert wurde oder nicht (s. "BookingCancelled").
+
+Hinweis: Verwende für deine Implementierung die Funktion `facet_wrap(, labeller = ...)`.
+
+```{r}
+
+```
+
+## Aufgabe (5 Punkte): Erstelle eine visuelle Häufigkeitstabelle
+
+Erstelle eine Heatmap, welche das Vorkommen von Art des Aufenthalts und Haushaltstyp farblich und in Zahlen darstellt.
+
+Hinweis: Verwende für deine Implementierung die Funktion `geom_tile()` und eine Farbskala, welche grosse Häufigkeiten dunkler einfärbt als kleine.
+
+```{r}
+
+```
+
+## Aufgabe (5 Punkte): Erstelle einen Mosaic-Plots
+
+Erstelle analog zur Heatmap oben einen Mosaicplot, welcher das Vorkommen von Art des Aufenthalts und Haushaltstyp darstellt (Farben können frei gewählt werden, Zahlen sind nicht im Plot zu integrieren).
+
+Hinweis: Verwende für deine Implementierung die Funktion `geom_mosaic()` aus dem Paket `ggmosaic`.
+
+```{r}
+
+```
+
+## Aufgabe (10 Punkte): Analysiere die Definition des Tagesdurchschnittpreises
+
+Plausibilisiere visuell, dass die Angaben des Attributs Tagesdurchschnittpreis ("AverageDailyRate") sich nicht auf den Preis pro Übernachtung und Person, sondern auf den Preis pro Übernachtung pro Zimmer beziehen.
+
+Hinweis: Die Visualisierung ist kein abschliessender Beweis. Beschreibe klar und nachvollziehbar, wieso die von dir gezeigte Grafik ein Indiz dafür ist, dass sich die gelisteten Tagesdurchschnittpreise auf Übernachtungen pro Zimmer beziehen.
+
+```{r}
+
+```
+
+## Aufgabe (10 Punkte): Plausibilisiere Interpretation des Tagesdurchschnittpreises
+
+Identifiziere drei Fälle, welche illustrieren, dass die Angaben des Attributs Tagesdurchschnittpreis ("AverageDailyRate") sich auf den Preis pro Übernachtung pro Zimmer beziehen, indem du gezielt paarweise Buchungen vergleichst, wo sich Anzahl Personen und Tagesdurchschnittpreis unterscheiden, andere relevante Variablen aber übereinstimmen.
+
+Gib für diese drei Fälle folgende Attribute aus: "GroupSize.x", "GroupSize.y", "AverageDailyRate.x", "AverageDailyRate.y" (die Endung ".x" bezieht sich auf das Attribut der ersten, ".y" der zweiten Beobachtung der paarweisen Buchung).
+
+Hinweis: Exploriere Beispiele von Hand und mache dann ein Refactoring deines Codes, d.h. verwende für deine Implementierung eine eigene Funktion mit `{{}}`, so dass eine wählbare Menge zufälliger Beispiele selektiert werden kann.
+
+```{r}
+
+```
+
+## Aufgabe (5 Punkte): Erstelle Facet-Plot des Tagesdurchschnittpreises
+
+Reproduziere die folgende Grafik ("Figure 1: AverageDailyRate_2016_RoomA") für die Verteilung der monatlichen Tagesdurchschnittpreise ("AverageDailyRate") von Zimmern mit AssignedRoomType "A" für das Jahr 2016 mit allen gezeigten Details.
+
+![AverageDailyRate_2016_RoomA](./AverageDailyRate_2016_RoomA.png)
+
+```{r}
+
+```
+
+## Aufgabe (5 Punkte): Verbessere Facet-Plot des Tagesdurchschnittpreises
+
+Verbessere die vorangehende Grafik so, dass die Reihenfolge der Monate chronologisch geordnet ist.
+
+```{r}
+
+```
+
+## Aufgabe (5 Punkte): Reproduziere Facet-Plot des Tagesdurchschnittpreises
+
+Reproduziere die folgende Grafik ("Figure 2: AverageDailyRate_RoomsACDEFG.png") mit allen gezeigten Details für die Verteilung der Tagesdurchschnittpreise ("AverageDailyRate") von Zimmern mit AssignedRoomType "A", "C", "D", "E", "F" und "G" ohne Beschränkung des Zeitraumes.
+
+![AverageDailyRate_RoomsACDEFG.png](./AverageDailyRate_RoomsACDEFG.png)
+
+```{r}
+
+```
+
+## Aufgabe (5 Punkte): Vereinfache Facet-Plot des Tagesdurchschnittpreises
+
+Erzeuge für die oben dargestellten Daten nun Boxplots zum Vergleich von Tagesdurchschnittpreisen ("AverageDailyRate") nach Zimmertyp ("AssignedRoomType") und visualisiere die Gruppengrösse mit Hilfe der Fläche der Box.
+
+```{r}
+
+```
+
+## Aufgabe (5 Punkte): Untersuche und visualisiere Korrelationen
+
+Berechne die Korrelation nach Bravais-Pearson für die Attribute Preis (Attribut "Price") und Anzahl Übernachtungen (Attribut "TotalNights"). Erstelle weiter ein Streudiagramm für "Price" vs "TotalNights" und integriere im Untertitel die Information der Anzahl Beobachtungen und der berechneten Korrelation auf drei Nachkommastellen gerundet.
+
+Hinweis: Verwende für deine Implementierung die Funktion `geom_jitter()` mit sinnvoller Wahl der Parameter `alpha` und `shape`.
+
+```{r}
+
+```
+
+## Aufgabe (10 Punkte): Bereinigung von Ausreissern
+
+Erstelle das obige Streudiagramm für "Price" vs "TotalNights" erneut und schränke die x-Achse und y-Achse so ein, dass Aussreisser am oberen Ende der Skala nicht gezeigt werden. Passe den Untertitel an, indem du erwähnst wieviele Ausreisser nicht gezeigt werden.
+
+Hinweis: Verwende für deine Implementierung die Definition des Boxplots: Ausreißer sind Datenpunkte, die sich ausserhalb der Zäune ("Whiskers") des Boxplots befinden. Die Whiskers haben die Länge des 1,5-fachen des Interquartilsbereichs und setzen oberhalb des oberen Quartils und unterhalb des unteren Quartils an.
+
+```{r}
+
+```
+
+## Aufgabe (10 Punkte): Untersuche den Zeitverlauf der Hotelankünfte
+
+Visualisiere die Anzahl der Hotelbuchungen nach Ankunftsdatum im Zeitverlauf, wobei die stornierten Buchungen nicht zu berücksichtigen sind. Visualisiere den Verlauf über 180 Tage, beginnend am 1. Juni 2016.
+
+Hinweis: Verwende für deine Implementierung `tidyverse` und `lubridate`.
+
+```{r}
+
+```
+
+## Aufgabe (5 Punkte): Identifiziere Tage mit meisten Buchungen
+
+Identifiziere die fünf Tage mit den meisten Zimmer-Buchungen gemessen am Datum der Ankunft, wobei die stornierten Buchungen nicht zu berücksichtigen sind. Gib zusätzlich die Anzahl Personen an, welche an diesen Tagen eingecheckt haben.
+
+```{r}
+
+```
+
+## Aufgabe (10 Punkte): Untersuche den Zeitverlauf des mittleren Tagesdurchschnittspreise der Buchungen
+
+Berechne für 2016 die zeitliche Entwicklung des Tagesdurchschnittspreises ("AverageDailyRate") aller Buchungen pro Woche. Visualisiere den Median sowie das 25%-Perzentil und 75%-Perzentil, um die Streuung des Tagesdurchschnittspreises zu illustrieren.
+
+Bestimme und markiere dann visuell die Kalenderwoche mit dem höchsten Tagesdurchschnittspreis mit Hilfe einer vertikalen roten Linie.
+
+```{r}
+
+```
+
+# Eigene Analysen
+
+## Aufgabe (20 Punkte): Exploriere den Datensatz weiter
+
+Untersuche weitere, noch nicht beleuchtete Zusammenhänge in den Daten und dokumentiere (a) deine Hypothese, (b) die gefundenen Zusammenhängen präzise in Worten.
+
+```{r}
+
+```
