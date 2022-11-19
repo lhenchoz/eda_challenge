@@ -304,13 +304,17 @@ sowie den Haushaltstyp (neue Faktor-Variable "HouseholdType"):
 ```{r}
 df_bookings <- df_bookings %>% mutate(TotalNights = StaysInWeekNights + StaysInWeekendNights, GroupSize = Adults + Children, Price = AverageDailyRate * TotalNights)
 
-
-
 df_bookings <- df_bookings %>% mutate(StayType = case_when(TotalNights > 7 ~ 'Long stay',
                                                            TotalNights == 7 ~ 'Full week',
                                                            TotalNights < 7 & StaysInWeekendNights == 0 ~ 'Week stay',
                                                            StaysInWeekendNights == 1 ~ 'Weekend only',
                                                            StaysInWeekendNights == 2 ~ 'Long weekend')) %>% mutate(StayType = as.factor(StayType))
+
+df_bookings <- df_bookings %>% mutate(HouseholdType = case_when(Adults == 1 & Children == 0 & Babies == 0 ~ 'Single',
+                                                           Adults == 2 & Children == 0 & Babies == 0 ~ 'Couple',
+                                                           Adults == 1 & (Children > 0 | Babies > 0) ~ 'Single Parent',
+                                                           Adults == 2 & (Children > 0 | Babies > 0) ~ 'Family',
+                                                           Adults > 2 ~ 'Group')) %>% mutate(HouseholdType = as.factor(HouseholdType))
 ```
 
 # Summarische Statistiken erzeugen
@@ -322,7 +326,7 @@ Gib für die beiden oben bearbeiteten Attribute "MarketSegment" und "Distributio
 Hinweis: Verwende für deine Implementierung nur **einen** Aufruf der Funktion `summary()`.
 
 ```{r}
-
+summary(df_bookings[c('MarketSegment','DistributionChannel')])
 ```
 
 ## Aufgabe (3 Punkte): Erstelle weitere Häufigkeitstabellen
@@ -332,7 +336,9 @@ Gib für die Attribute "Meal" und "IsRepeatedGuest" separat tabellarische Häufi
 Hinweis: Verwende für deine Implementierung die Funktion `kable()`.
 
 ```{r}
-
+#TODO In einer Tabelle anzeigen
+kable(proportions(summary(df_bookings$Meal)), caption = "Meal", digits = 2, col.names = 'Frequency')
+kable(proportions(summary(df_bookings$IsRepeatedGuest)), caption = "IsRepeatedGuest", digits = 2, col.names = 'Frequency')
 ```
 
 ## Aufgabe (5 Punkte): Erstelle weitere Häufigkeitstabellen
@@ -340,7 +346,7 @@ Hinweis: Verwende für deine Implementierung die Funktion `kable()`.
 Erstelle eine summarische, univariate Statistik für alle Attribute und dokumentiere kurz allfällige Besonderheiten.
 
 ```{r}
-
+summary(df_bookings)
 ```
 
 ## Aufgabe (4 Punkte): Prüfe Auffälligkeiten
@@ -350,27 +356,37 @@ Erstelle eine tabellarische Häufigkeitsverteilung für das neu gebildete Attrib
 Hinweis: Verwende für deine Implementierung die Funktion `kable()`.
 
 ```{r}
-
+kable(proportions(summary(df_bookings$HouseholdType)), caption = "HouseholdType", digits = 2, col.names = 'Frequency')
+df_bookings %>% filter(is.na(HouseholdType))
 ```
+Analysis:
+In total there are 13 NAs. By filtering the column for NAs, we can see that adults, children and babies is set to zero. The reason for this is unkown. We can also say, that over 2/3 of the guests are couples.
+
 
 ## Aufgabe (3 Punkte): Prüfe weitere Auffälligkeiten
 
 Erstelle eine Statistik für das Attribut "AverageDailyRate" und identifiziere Auffälligkeiten.
 
 ```{r}
-
+summary(df_bookings$AverageDailyRate)
+df_bookings %>%  filter(AverageDailyRate < 0)
+df_bookings %>%  filter(AverageDailyRate == 0)
 ```
+Analysis:
+There is a negative value as well as zeros which means that for some reason guests dont have to pay for the hotel.
 
 ## Aufgabe (2 Punkte): Erstelle einen bereinigten Datensatz
 
 Bereinige das Data Frame, indem du Beobachtungen mit Auffälligkeiten und unplausiblen Werten in den Attributen "AverageDailyRate" und "HouseholdType" entfernst.
 
- 
+&nbsp;
 
 **FÜR ALLE WEITEREN ANALYSEN IST AUSSCHLIESSLICH DER BEREINIGTE DATENSATZ ZU VERWENDEN!!!**
 
 ```{r}
-
+#TODO Was mit NAs in HouseholdType machen? Oder evtl andere Auffälligkeiten? Evtl. Median für Adults, Children setzten und neu erstellen lassen oder Werte Prozentual setzen? Stichwort Imputieren.
+df_bookings <- df_bookings %>% 
+  mutate(AverageDailyRate = replace(AverageDailyRate, AverageDailyRate <= 0, median(AverageDailyRate, na.rm = TRUE)))
 ```
 
 # Visualisierung
