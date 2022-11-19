@@ -336,8 +336,7 @@ Gib für die Attribute "Meal" und "IsRepeatedGuest" separat tabellarische Häufi
 Hinweis: Verwende für deine Implementierung die Funktion `kable()`.
 
 ```{r}
-#TODO In einer Tabelle anzeigen
-kable(proportions(summary(df_bookings$Meal)), caption = "Meal", digits = 2, col.names = 'Frequency')
+kable(proportions(summary(df_bookings$Meal)), caption = 'Meal', digits = 2, col.names = 'Frequency')
 kable(proportions(summary(df_bookings$IsRepeatedGuest)), caption = "IsRepeatedGuest", digits = 2, col.names = 'Frequency')
 ```
 
@@ -356,7 +355,7 @@ Erstelle eine tabellarische Häufigkeitsverteilung für das neu gebildete Attrib
 Hinweis: Verwende für deine Implementierung die Funktion `kable()`.
 
 ```{r}
-kable(proportions(summary(df_bookings$HouseholdType)), caption = "HouseholdType", digits = 2, col.names = 'Frequency')
+kable(proportions(summary(df_bookings$HouseholdType)), caption = "HouseholdType", digits = 5, col.names = '%')
 df_bookings %>% filter(is.na(HouseholdType))
 ```
 Analysis:
@@ -373,7 +372,7 @@ df_bookings %>%  filter(AverageDailyRate < 0)
 df_bookings %>%  filter(AverageDailyRate == 0)
 ```
 Analysis:
-There is a negative value as well as zeros which means that for some reason guests dont have to pay for the hotel.
+First we saw, that there is an observation with a negative value, which is invalid because it is not possible that customers pay a negative price for the hotel. Also we saw some observation with an average daily rate of 0, which we think is possible because there may be some customers with a coupon.
 
 ## Aufgabe (2 Punkte): Erstelle einen bereinigten Datensatz
 
@@ -384,9 +383,7 @@ Bereinige das Data Frame, indem du Beobachtungen mit Auffälligkeiten und unplau
 **FÜR ALLE WEITEREN ANALYSEN IST AUSSCHLIESSLICH DER BEREINIGTE DATENSATZ ZU VERWENDEN!!!**
 
 ```{r}
-#TODO Was mit NAs in HouseholdType machen? Oder evtl andere Auffälligkeiten? Evtl. Median für Adults, Children setzten und neu erstellen lassen oder Werte Prozentual setzen? Stichwort Imputieren.
-df_bookings <- df_bookings %>% 
-  mutate(AverageDailyRate = replace(AverageDailyRate, AverageDailyRate <= 0, median(AverageDailyRate, na.rm = TRUE)))
+df_bookings <- df_bookings %>% subset(AverageDailyRate > 0) %>% drop_na(HouseholdType)
 ```
 
 # Visualisierung
