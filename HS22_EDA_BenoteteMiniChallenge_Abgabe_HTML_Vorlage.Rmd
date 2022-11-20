@@ -397,7 +397,12 @@ Erstelle eine graphische Analyse, welche die relativen Unterschiede des Auftrete
 Hinweis: Verwende für deine Implementierung die Funktion `facet_wrap(, labeller = ...)`.
 
 ```{r}
-
+ggplot(df_bookings, aes(HouseholdType, TotalSpecialRequests)) + 
+  stat_summary(fun = "mean", geom = "bar") + 
+  facet_wrap(~BookingCancelled, ncol = 2, labeller = labeller(BookingCancelled = 
+    c("No" = "Not cancelled bookings",
+      "Yes" = "Cancelled bookings"))) +
+  labs(x = "Household types", y = "Mean of special requests")
 ```
 
 ## Aufgabe (5 Punkte): Erstelle eine visuelle Häufigkeitstabelle
