@@ -359,7 +359,7 @@ kable(proportions(summary(df_bookings$HouseholdType)), caption = "HouseholdType"
 df_bookings %>% filter(is.na(HouseholdType))
 ```
 Analysis:
-In total there are 13 NAs. By filtering the column for NAs, we can see that adults, children and babies is set to zero. The reason for this is unkown. We can also say, that over 2/3 of the guests are couples.
+In total there are 13 NAs. By filtering the column for NAs, we can see that adults, children and babies is set to zero. The reason for this is unkown, but it is probably missing data. We can also say, that over 2/3 of the guests are couples.
 
 
 ## Aufgabe (3 Punkte): Prüfe weitere Auffälligkeiten
@@ -383,7 +383,7 @@ Bereinige das Data Frame, indem du Beobachtungen mit Auffälligkeiten und unplau
 **FÜR ALLE WEITEREN ANALYSEN IST AUSSCHLIESSLICH DER BEREINIGTE DATENSATZ ZU VERWENDEN!!!**
 
 ```{r}
-df_bookings <- df_bookings %>% subset(AverageDailyRate > 0) %>% drop_na(HouseholdType)
+df_bookings <- df_bookings %>% subset(AverageDailyRate >= 0) %>% drop_na(HouseholdType)
 ```
 
 # Visualisierung
@@ -412,7 +412,16 @@ Erstelle eine Heatmap, welche das Vorkommen von Art des Aufenthalts und Haushalt
 Hinweis: Verwende für deine Implementierung die Funktion `geom_tile()` und eine Farbskala, welche grosse Häufigkeiten dunkler einfärbt als kleine.
 
 ```{r}
+#TODO Logscale beschriften
+df_fill <- df_bookings %>%
+  group_by(StayType, HouseholdType) %>%
+  summarize(Freq=n())
 
+  
+ggplot(df_fill, aes(StayType, HouseholdType, fill = df_fill$Freq)) +
+  geom_tile() +
+  geom_text(aes(label = df_fill$Freq), color = "black", size = 4) +
+  scale_fill_gradient2(trans = 'log', high = '#004A96')
 ```
 
 ## Aufgabe (5 Punkte): Erstelle einen Mosaic-Plots
@@ -422,7 +431,10 @@ Erstelle analog zur Heatmap oben einen Mosaicplot, welcher das Vorkommen von Art
 Hinweis: Verwende für deine Implementierung die Funktion `geom_mosaic()` aus dem Paket `ggmosaic`.
 
 ```{r}
-
+ggplot(df_bookings) +
+  geom_mosaic(aes(x = product(StayType), fill = HouseholdType)) + 
+  theme_mosaic()+ 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5))
 ```
 
 ## Aufgabe (10 Punkte): Analysiere die Definition des Tagesdurchschnittpreises
@@ -432,7 +444,10 @@ Plausibilisiere visuell, dass die Angaben des Attributs Tagesdurchschnittpreis (
 Hinweis: Die Visualisierung ist kein abschliessender Beweis. Beschreibe klar und nachvollziehbar, wieso die von dir gezeigte Grafik ein Indiz dafür ist, dass sich die gelisteten Tagesdurchschnittpreise auf Übernachtungen pro Zimmer beziehen.
 
 ```{r}
-
+ggplot(df_bookings, aes(GroupSize, AverageDailyRate)) + 
+  stat_summary(fun = "mean", geom = "point")
+ggplot(df_bookings, aes(reorder(AssignedRoomType, AverageDailyRate), AverageDailyRate)) + 
+  stat_summary(fun = "mean", geom = "point")
 ```
 
 ## Aufgabe (10 Punkte): Plausibilisiere Interpretation des Tagesdurchschnittpreises
