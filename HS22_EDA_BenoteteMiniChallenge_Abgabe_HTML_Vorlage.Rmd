@@ -262,7 +262,7 @@ Erstelle Datumsvariablen für Reservation und Ankunft aufgrund der Informationen
 Hinweis: Verwende für deine Implementierung die library `lubridate` und Informationen aus [R for Data Science, Chapter "Dates and times"](https://r4ds.had.co.nz/dates-and-times.html) sowie die Posts [Umgang mit Datumsinformationen](https://spaces.technik.fhnw.ch/spaces/explorative-datenanalyse/beitraege/umgang-mit-datumsinformationen) und [Umgang mit textuellen Daten mit tidyverse's stringr](https://spaces.technik.fhnw.ch/spaces/explorative-datenanalyse/beitraege/umgang-mit-textuellen-daten-mit-tidyverses-stringr).
 
 ```{r}
-df_bookings <- df_bookings %>% mutate(ArrivalDate = ymd(str_c(ArrivalDateYear, ArrivalDateMonth, ArrivalDateDayOfMonth, sep = "-")), .keep = 'unused', ReservationStatusDate = ymd(ReservationStatusDate))
+df_bookings <- df_bookings %>% mutate(ArrivalDate = ymd(str_c(ArrivalDateYear, ArrivalDateMonth, ArrivalDateDayOfMonth, sep = "-")), ReservationStatusDate = ymd(ReservationStatusDate))
 ```
 
 ## Aufgabe (3 Punkte): Bilde Faktoren
@@ -413,12 +413,11 @@ Hinweis: Verwende für deine Implementierung die Funktion `geom_tile()` und eine
 
 ```{r}
 #TODO Logscale beschriften
-df_fill <- df_bookings %>%
+options(dplyr.summarise.inform = FALSE)
+df_bookings %>%
   group_by(StayType, HouseholdType) %>%
-  summarize(Freq=n())
-
-  
-ggplot(df_fill, aes(StayType, HouseholdType, fill = df_fill$Freq)) +
+  summarize(Freq=n()) %>% 
+  ggplot(aes(StayType, HouseholdType, fill = Freq)) +
   geom_tile() +
   geom_text(aes(label = df_fill$Freq), color = "black", size = 4) +
   scale_fill_gradient2(trans = 'log', high = '#004A96')
@@ -448,6 +447,14 @@ ggplot(df_bookings, aes(GroupSize, AverageDailyRate)) +
   stat_summary(fun = "mean", geom = "point")
 ggplot(df_bookings, aes(reorder(AssignedRoomType, AverageDailyRate), AverageDailyRate)) + 
   stat_summary(fun = "mean", geom = "point")
+ggplot(df_bookings, aes(TotalNights, Price)) +
+  stat_summary(fun = "median", geom = "point")
+ggplot(df_bookings, aes(TotalNights, Price, color = AssignedRoomType)) +
+  stat_summary(fun = "mean", geom = "point")
+ggplot(df_bookings, aes(TotalNights, Price)) +
+  geom_point(aes(fill = AssignedRoomType, color = AssignedRoomType))
+ggplot(df_bookings, aes(TotalNights, Price)) +
+  stat_summary(fun = "mean", geom = "point")
 ```
 
 ## Aufgabe (10 Punkte): Plausibilisiere Interpretation des Tagesdurchschnittpreises
@@ -469,7 +476,7 @@ Reproduziere die folgende Grafik ("Figure 1: AverageDailyRate_2016_RoomA") für 
 ![AverageDailyRate_2016_RoomA](./AverageDailyRate_2016_RoomA.png)
 
 ```{r}
-
+df_bookings %>% filter(ArrivalDateYear == 2016, AssignedRoomType == "A")
 ```
 
 ## Aufgabe (5 Punkte): Verbessere Facet-Plot des Tagesdurchschnittpreises
