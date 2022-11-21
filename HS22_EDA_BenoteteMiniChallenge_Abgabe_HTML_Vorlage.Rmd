@@ -383,7 +383,7 @@ Bereinige das Data Frame, indem du Beobachtungen mit Auffälligkeiten und unplau
 **FÜR ALLE WEITEREN ANALYSEN IST AUSSCHLIESSLICH DER BEREINIGTE DATENSATZ ZU VERWENDEN!!!**
 
 ```{r}
-df_bookings <- df_bookings %>% subset(AverageDailyRate >= 0) %>% drop_na(HouseholdType)
+df_bookings <- df_bookings %>% subset(AverageDailyRate > 0) %>% drop_na(HouseholdType)
 ```
 
 # Visualisierung
@@ -476,7 +476,10 @@ Reproduziere die folgende Grafik ("Figure 1: AverageDailyRate_2016_RoomA") für 
 ![AverageDailyRate_2016_RoomA](./AverageDailyRate_2016_RoomA.png)
 
 ```{r}
-df_bookings %>% filter(ArrivalDateYear == 2016, AssignedRoomType == "A")
+df_bookings %>% filter(ArrivalDateYear == 2016, AssignedRoomType == "A") %>% 
+  ggplot(aes(AverageDailyRate)) +
+  geom_histogram() +
+  facet_wrap(~ ArrivalDateMonth, ncol = 3)
 ```
 
 ## Aufgabe (5 Punkte): Verbessere Facet-Plot des Tagesdurchschnittpreises
