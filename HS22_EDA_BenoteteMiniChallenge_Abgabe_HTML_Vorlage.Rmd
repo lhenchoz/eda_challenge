@@ -384,6 +384,8 @@ Bereinige das Data Frame, indem du Beobachtungen mit Auffälligkeiten und unplau
 
 ```{r}
 df_bookings <- df_bookings %>% subset(AverageDailyRate > 0) %>% drop_na(HouseholdType)
+#df_bookings <- df_bookings %>% 
+  #(AverageDailyRate = replace(AverageDailyRate, AverageDailyRate <= 0, mean(AverageDailyRate, na.rm = TRUE)))
 ```
 
 # Visualisierung
@@ -478,8 +480,10 @@ Reproduziere die folgende Grafik ("Figure 1: AverageDailyRate_2016_RoomA") für 
 ```{r}
 df_bookings %>% filter(ArrivalDateYear == 2016, AssignedRoomType == "A") %>% 
   ggplot(aes(AverageDailyRate)) +
-  geom_histogram() +
-  facet_wrap(~ ArrivalDateMonth, ncol = 3)
+  geom_histogram(aes(fill = ArrivalDateMonth)) +
+  facet_wrap(~ ArrivalDateMonth, ncol = 3) +
+  theme(legend.position = 'none') +
+  labs(title = "Distribution of Average Daily Rate per month for 2016", subtitle = '(Bookings of Assigned Room Type A only)', x = 'Average Daily Rate [EURO]', y = 'Bookings') 
 ```
 
 ## Aufgabe (5 Punkte): Verbessere Facet-Plot des Tagesdurchschnittpreises
@@ -487,7 +491,13 @@ df_bookings %>% filter(ArrivalDateYear == 2016, AssignedRoomType == "A") %>%
 Verbessere die vorangehende Grafik so, dass die Reihenfolge der Monate chronologisch geordnet ist.
 
 ```{r}
-
+df_bookings$ArrivalDateMonth = factor(df_bookings$ArrivalDateMonth, levels=c("January","February","March","April","May","June","July","August","September","October","November","December"))
+df_bookings %>% filter(ArrivalDateYear == 2016, AssignedRoomType == "A") %>% 
+  ggplot(aes(AverageDailyRate)) +
+  geom_histogram(aes(fill = ArrivalDateMonth)) +
+  facet_wrap(~ ArrivalDateMonth, ncol = 3) +
+  theme(legend.position = 'none') +
+  labs(title = "Distribution of Average Daily Rate per month for 2016", subtitle = '(Bookings of Assigned Room Type A only)', x = 'Average Daily Rate [EURO]', y = 'Bookings')
 ```
 
 ## Aufgabe (5 Punkte): Reproduziere Facet-Plot des Tagesdurchschnittpreises
