@@ -535,7 +535,7 @@ Berechne die Korrelation nach Bravais-Pearson für die Attribute Preis (Attribut
 Hinweis: Verwende für deine Implementierung die Funktion `geom_jitter()` mit sinnvoller Wahl der Parameter `alpha` und `shape`.
 
 ```{r}
-sub <- paste("Correlation: ",round(cor(df_bookings$Price, df_bookings$TotalNights),3))
+sub <- paste('Observations: ', nrow(df_bookings),"| Correlation: ",round(cor(df_bookings$Price, df_bookings$TotalNights),3))
 
 df_bookings %>% ggplot(aes(Price,TotalNights)) +
   geom_jitter(aes(),alpha=0.2,shape=1) + 
@@ -559,11 +559,13 @@ upper_range_total_nights <- Q_total_nights[2]+1.5*iqr_total_nights
 #Count outliers
 count_outliers <- df_bookings %>% filter(Price >= upper_range_price | TotalNights >= upper_range_total_nights) %>% nrow()
 
+sub2 <- paste('Observations: ', nrow(df_bookings) - count_outliers,"| Correlation: ",round(cor(df_bookings$Price, df_bookings$TotalNights),3), '| Removed outliers: ', count_outliers)
+
 df_bookings %>% ggplot(aes(x = Price, y = TotalNights)) +
   geom_jitter(alpha = 0.2, shape = 1) +
   xlim(0, upper_range_price) +
   ylim(0, upper_range_total_nights) +
-  labs(title = "Correlation between Price and Total Nights", subtitle = paste('Removed ', count_outliers, 'outliers'), x = 'Price [EURO]', y = 'Total Nights')
+  labs(title = "Correlation between Price and Total Nights", subtitle = sub2, x = 'Price [EURO]', y = 'Total Nights')
 ```
 
 ## Aufgabe (10 Punkte): Untersuche den Zeitverlauf der Hotelankünfte
@@ -594,37 +596,13 @@ df_bookings %>%
 Identifiziere die fünf Tage mit den meisten Zimmer-Buchungen gemessen am Datum der Ankunft, wobei die stornierten Buchungen nicht zu berücksichtigen sind. Gib zusätzlich die Anzahl Personen an, welche an diesen Tagen eingecheckt haben.
 
 ```{r}
-temp <- df_bookings %>%
+df_bookings %>%
   filter(BookingCancelled == "No") %>%
   group_by(ArrivalDate) %>%
-  summarize(Freq=n()) %>%
-  arrange(desc(Freq)) %>%
-  head(5) 
-
-temp_f <- temp
-temp <- temp[,1]
-
-temp2 <- df_bookings %>% 
-  filter(BookingCancelled == "No") %>%
-    filter(ArrivalDate == temp[1,]|ArrivalDate == temp[2,]|ArrivalDate == temp[3,]|ArrivalDate ==temp[4,]|ArrivalDate == temp[5,]) %>%
-  group_by(ArrivalDate) %>%
-  summarise(n = sum(GroupSize)) 
-
-temp_f <- merge(temp_f,temp2)
-
-temp_f %>% 
-  rename(
-    date_of_arrival = ArrivalDate,
-    number_of_reservations = Freq,
-    number_of_people = n
-    ) %>%
-  arrange(desc(number_of_reservations))
-
-temp_f <- NULL
-temp <- NULL
-temp2 <- NULL
+  summarize(Bookings = n(), 'Check-Ins' = sum(GroupSize)) %>%
+  arrange(desc(Bookings)) %>%
+  head(5)
 ```
-
 ## Aufgabe (10 Punkte): Untersuche den Zeitverlauf des mittleren Tagesdurchschnittspreise der Buchungen
 
 Berechne für 2016 die zeitliche Entwicklung des Tagesdurchschnittspreises ("AverageDailyRate") aller Buchungen pro Woche. Visualisiere den Median sowie das 25%-Perzentil und 75%-Perzentil, um die Streuung des Tagesdurchschnittspreises zu illustrieren.
@@ -632,7 +610,9 @@ Berechne für 2016 die zeitliche Entwicklung des Tagesdurchschnittspreises ("Ave
 Bestimme und markiere dann visuell die Kalenderwoche mit dem höchsten Tagesdurchschnittspreis mit Hilfe einer vertikalen roten Linie.
 
 ```{r}
-
+df_bookings %>% filter(ArrivalDate >= "2016-01-01" & ArrivalDate <= "2016-12-31") %>% group_by(week = week(ArrivalDate)) %>% summarise(mean_week = mean(AverageDailyRate)) %>% ggplot(aes(x = week, y = mean_week)) +
+  geom_point()
+df_bookings %>% filter(ArrivalDate >= "2016-01-01" & ArrivalDate <= "2016-12-31") %>% group_by(week = week(ArrivalDate)) %>% summarise(mean_week = mean(AverageDailyRate)) %>% IQR(mean_week)
 ```
 
 # Eigene Analysen
