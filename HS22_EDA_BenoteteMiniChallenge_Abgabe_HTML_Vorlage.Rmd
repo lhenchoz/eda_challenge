@@ -358,8 +358,9 @@ Hinweis: Verwende für deine Implementierung die Funktion `kable()`.
 kable(proportions(summary(df_bookings$HouseholdType)), caption = "HouseholdType", digits = 5, col.names = '%')
 df_bookings %>% filter(is.na(HouseholdType))
 ```
+Analysis:
+In total there are 13 NAs. By filtering the column for NAs, we can see that adults, children and babies is set to zero. The reason for this is unkown, but it is probably missing data. We can also say, that over 2/3 of the guests are couples.
 
-Analysis: In total there are 13 NAs. By filtering the column for NAs, we can see that adults, children and babies is set to zero. The reason for this is unkown, but it is probably missing data. We can also say, that over 2/3 of the guests are couples.
 
 ## Aufgabe (3 Punkte): Prüfe weitere Auffälligkeiten
 
@@ -370,14 +371,14 @@ summary(df_bookings$AverageDailyRate)
 df_bookings %>%  filter(AverageDailyRate < 0)
 df_bookings %>%  filter(AverageDailyRate == 0)
 ```
-
-Analysis: First we saw, that there is an observation with a negative value, which is invalid because it is not possible that customers pay a negative price for the hotel. Also we saw some observation with an average daily rate of 0, which we think is possible because there may be some customers with a coupon.
+Analysis:
+First we saw, that there is an observation with a negative value, which is invalid because it is not possible that customers pay a negative price for the hotel. Also we saw some observation with an average daily rate of 0, which we think is possible because there may be some customers with a coupon.
 
 ## Aufgabe (2 Punkte): Erstelle einen bereinigten Datensatz
 
 Bereinige das Data Frame, indem du Beobachtungen mit Auffälligkeiten und unplausiblen Werten in den Attributen "AverageDailyRate" und "HouseholdType" entfernst.
 
- 
+&nbsp;
 
 **FÜR ALLE WEITEREN ANALYSEN IST AUSSCHLIESSLICH DER BEREINIGTE DATENSATZ ZU VERWENDEN!!!**
 
@@ -468,7 +469,6 @@ Hinweis: Exploriere Beispiele von Hand und mache dann ein Refactoring deines Cod
 
 ```{r}
 
-
 ```
 
 ## Aufgabe (5 Punkte): Erstelle Facet-Plot des Tagesdurchschnittpreises
@@ -514,14 +514,18 @@ df_bookings %>%  subset(AssignedRoomType == "A" | AssignedRoomType =="C"| Assign
   theme(legend.position = 'none') +
   labs(title = "Distribution of Average Daily Rate per month", x = 'Average Daily Rate [EURO]', y = 'Bookings')
 ```
-```
 
 ## Aufgabe (5 Punkte): Vereinfache Facet-Plot des Tagesdurchschnittpreises
 
 Erzeuge für die oben dargestellten Daten nun Boxplots zum Vergleich von Tagesdurchschnittpreisen ("AverageDailyRate") nach Zimmertyp ("AssignedRoomType") und visualisiere die Gruppengrösse mit Hilfe der Fläche der Box.
 
 ```{r}
-
+df_bookings %>%  subset(AssignedRoomType == "A" | AssignedRoomType =="C"| AssignedRoomType =="D"| AssignedRoomType =="E"| AssignedRoomType =="F"| AssignedRoomType =="G") %>%
+  ggplot(aes(x = AssignedRoomType ,y =AverageDailyRate, fill=AssignedRoomType)) +
+  geom_boxplot() +
+  facet_wrap(~AssignedRoomType, ncol = 3, scales = "free") +
+  theme(legend.position = 'none') +
+  labs(title = "Distribution of Average Daily Rate per month", x = 'Assigned Room Type', y = 'Average Daily Rate [EURO]')
 ```
 
 ## Aufgabe (5 Punkte): Untersuche und visualisiere Korrelationen
@@ -531,7 +535,11 @@ Berechne die Korrelation nach Bravais-Pearson für die Attribute Preis (Attribut
 Hinweis: Verwende für deine Implementierung die Funktion `geom_jitter()` mit sinnvoller Wahl der Parameter `alpha` und `shape`.
 
 ```{r}
+sub <- paste("Correlation: ",round(cor(df_bookings$Price, df_bookings$TotalNights),3))
 
+df_bookings %>% ggplot(aes(Price,TotalNights)) +
+  geom_jitter(aes(),alpha=0.2,shape=1) + 
+  labs(title = 'Correlation between Price and TotalNights', subtitle = sub)
 ```
 
 ## Aufgabe (10 Punkte): Bereinigung von Ausreissern
@@ -541,7 +549,21 @@ Erstelle das obige Streudiagramm für "Price" vs "TotalNights" erneut und schrä
 Hinweis: Verwende für deine Implementierung die Definition des Boxplots: Ausreißer sind Datenpunkte, die sich ausserhalb der Zäune ("Whiskers") des Boxplots befinden. Die Whiskers haben die Länge des 1,5-fachen des Interquartilsbereichs und setzen oberhalb des oberen Quartils und unterhalb des unteren Quartils an.
 
 ```{r}
+Q_price <- quantile(df_bookings$Price, probs=c(.25, .75), na.rm = FALSE)
+iqr_price <- IQR(df_bookings$Price)
+upper_range_price <-  Q_price[2]+1.5*iqr_price
+Q_total_nights <- quantile(df_bookings$TotalNights, probs=c(.25, .75), na.rm = FALSE)
+iqr_total_nights <- IQR(df_bookings$TotalNights)
+upper_range_total_nights <- Q_total_nights[2]+1.5*iqr_total_nights
 
+#Count outliers
+count_outliers <- df_bookings %>% filter(Price >= upper_range_price | TotalNights >= upper_range_total_nights) %>% nrow()
+
+df_bookings %>% ggplot(aes(x = Price, y = TotalNights)) +
+  geom_jitter(alpha = 0.2, shape = 1) +
+  xlim(0, upper_range_price) +
+  ylim(0, upper_range_total_nights) +
+  labs(title = "Correlation between Price and Total Nights", subtitle = paste('Removed ', count_outliers, 'outliers'), x = 'Price [EURO]', y = 'Total Nights')
 ```
 
 ## Aufgabe (10 Punkte): Untersuche den Zeitverlauf der Hotelankünfte
@@ -551,7 +573,20 @@ Visualisiere die Anzahl der Hotelbuchungen nach Ankunftsdatum im Zeitverlauf, wo
 Hinweis: Verwende für deine Implementierung `tidyverse` und `lubridate`.
 
 ```{r}
-
+df_bookings %>% filter(BookingCancelled == 'No') %>% ggplot(aes(x=ArrivalDate)) +
+  geom_density() +
+  scale_x_date(date_labels = "%Y-%b", breaks = seq(as.Date("2016-06-01"), as.Date("2016-06-01")+180, "months"), limits = c(as.Date("2016-06-01"), c(as.Date("2016-06-01")+180)))+ theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5)) +
+  labs(title = "Density of arrivals over time", subtitle = 'Measured from 1.June - 28.November 2016', x = 'Date', y = 'Density')
+```
+```{r}
+df_bookings %>%
+  filter(BookingCancelled == "No") %>%
+  group_by(ArrivalDate) %>%
+  summarize(Freq=n()) %>% 
+  ggplot(aes(x=ArrivalDate, y = Freq)) +
+  geom_line() +
+  scale_x_date(date_labels = "%Y-%b", breaks = seq(as.Date("2016-06-01"), as.Date("2016-06-01")+180, "months"), limits = c(as.Date("2016-06-01"), c(as.Date("2016-06-01")+180)))+ theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5)) +
+  labs(title = "Density of arrivals over time", subtitle = 'Measured from 1.June - 28.November 2016', x = 'Date', y = 'Density')
 ```
 
 ## Aufgabe (5 Punkte): Identifiziere Tage mit meisten Buchungen
@@ -559,7 +594,35 @@ Hinweis: Verwende für deine Implementierung `tidyverse` und `lubridate`.
 Identifiziere die fünf Tage mit den meisten Zimmer-Buchungen gemessen am Datum der Ankunft, wobei die stornierten Buchungen nicht zu berücksichtigen sind. Gib zusätzlich die Anzahl Personen an, welche an diesen Tagen eingecheckt haben.
 
 ```{r}
+temp <- df_bookings %>%
+  filter(BookingCancelled == "No") %>%
+  group_by(ArrivalDate) %>%
+  summarize(Freq=n()) %>%
+  arrange(desc(Freq)) %>%
+  head(5) 
 
+temp_f <- temp
+temp <- temp[,1]
+
+temp2 <- df_bookings %>% 
+  filter(BookingCancelled == "No") %>%
+    filter(ArrivalDate == temp[1,]|ArrivalDate == temp[2,]|ArrivalDate == temp[3,]|ArrivalDate ==temp[4,]|ArrivalDate == temp[5,]) %>%
+  group_by(ArrivalDate) %>%
+  summarise(n = sum(GroupSize)) 
+
+temp_f <- merge(temp_f,temp2)
+
+temp_f %>% 
+  rename(
+    date_of_arrival = ArrivalDate,
+    number_of_reservations = Freq,
+    number_of_people = n
+    ) %>%
+  arrange(desc(number_of_reservations))
+
+temp_f <- NULL
+temp <- NULL
+temp2 <- NULL
 ```
 
 ## Aufgabe (10 Punkte): Untersuche den Zeitverlauf des mittleren Tagesdurchschnittspreise der Buchungen
