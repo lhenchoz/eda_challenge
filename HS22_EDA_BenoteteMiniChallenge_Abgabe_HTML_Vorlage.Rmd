@@ -587,7 +587,8 @@ df_bookings %>%
   summarize(Freq=n()) %>% 
   ggplot(aes(x=ArrivalDate, y = Freq)) +
   geom_line() +
-  scale_x_date(date_labels = "%Y-%b", breaks = seq(as.Date("2016-06-01"), as.Date("2016-06-01")+180, "months"), limits = c(as.Date("2016-06-01"), c(as.Date("2016-06-01")+180)))+ theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5)) +
+  scale_x_date(date_labels = "%Y-%b", breaks = seq(as.Date("2016-06-01"), as.Date("2016-06-01")+180, "months"), limits = c(as.Date("2016-06-01"), c(as.Date("2016-06-01")+180))) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5)) +
   labs(title = "Density of arrivals over time", subtitle = 'Measured from 1.June - 28.November 2016', x = 'Date', y = 'Density')
 ```
 
@@ -610,11 +611,17 @@ Berechne für 2016 die zeitliche Entwicklung des Tagesdurchschnittspreises ("Ave
 Bestimme und markiere dann visuell die Kalenderwoche mit dem höchsten Tagesdurchschnittspreis mit Hilfe einer vertikalen roten Linie.
 
 ```{r}
-df_bookings %>% filter(ArrivalDate >= "2016-01-01" & ArrivalDate <= "2016-12-31") %>% group_by(week = week(ArrivalDate)) %>% summarise(mean_week = mean(AverageDailyRate)) %>% ggplot(aes(x = week, y = mean_week)) +
-  geom_point()
-df_bookings %>% filter(ArrivalDate >= "2016-01-01" & ArrivalDate <= "2016-12-31") %>% group_by(week = week(ArrivalDate)) %>% summarise(mean_week = mean(AverageDailyRate)) %>% IQR(mean_week)
+df_bookings %>% filter(ArrivalDate >= "2016-01-01" & ArrivalDate <= "2016-12-31") %>% group_by(week = week(ArrivalDate)) %>% summarise(mean_week = mean(AverageDailyRate)) %>% 
+  ggplot(aes(x = week, y = mean_week)) +
+  geom_area(fill="#69b3a2", alpha=0.4) +
+  geom_line(color="#69b3a2", size=2) +
+  geom_hline(aes(yintercept = quantile(mean_week)[2]), color="black", size=1) +
+  geom_hline(aes(yintercept = quantile(mean_week)[4]), color="black", size=1) +
+  geom_hline(aes(yintercept = median(mean_week))) +
+  geom_vline(aes(xintercept=week[mean_week == max(mean_week)]), color='red') +
+  scale_x_continuous(breaks = seq(1, 53, 2)) +
+  labs(title = "Mean AverageDailyRate over time", subtitle = 'All weeks in 2016', x = 'Week', y = 'Mean of AverageDailyRate per week')
 ```
-
 # Eigene Analysen
 
 ## Aufgabe (20 Punkte): Exploriere den Datensatz weiter
@@ -624,3 +631,16 @@ Untersuche weitere, noch nicht beleuchtete Zusammenhänge in den Daten und dokum
 ```{r}
 
 ```
+
+
+Ideen:
+- 
+```{r}
+library(DataExplorer)
+temp <- df_bookings %>% select(AverageDailyRate, LeadTime)
+plot_correlation(temp)
+plot_histogram(df_bookings)
+
+ggplot(df_bookings, aes(x = AverageDailyRate, y = LeadTime)) + geom_point()
+```
+
