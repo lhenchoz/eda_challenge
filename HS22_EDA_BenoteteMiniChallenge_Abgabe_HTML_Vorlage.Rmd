@@ -490,12 +490,16 @@ ggplot(df_bookings, aes(reorder(AssignedRoomType, AverageDailyRate), AverageDail
   stat_summary(fun = 'mean', geom = 'point')
 ggplot(df_bookings, aes(TotalNights, Price)) +
   stat_summary(fun = 'median', geom = 'point')
-ggplot(df_bookings, aes(TotalNights, Price, color = AssignedRoomType)) +
-  stat_summary(fun = 'mean', geom = 'point')
+ggplot(df_bookings, aes(TotalNights, AverageDailyRate, color = AssignedRoomType)) +
+  stat_summary(fun = 'mean', geom = 'line')
+ggplot(df_bookings, aes(TotalNights, AverageDailyRate, fill = AssignedRoomType)) +
+  geom_area()
 ggplot(df_bookings, aes(TotalNights, Price)) +
   geom_point(aes(fill = AssignedRoomType, color = AssignedRoomType))
 ggplot(df_bookings, aes(TotalNights, Price)) +
   stat_summary(fun = 'mean', geom = 'point')
+ggplot(df_bookings, aes(x = AssignedRoomType, y = AverageDailyRate)) +
+  geom_boxplot(aes(fill = GroupSize))
 ```
 
 ## Aufgabe (10 Punkte): Plausibilisiere Interpretation des Tagesdurchschnittpreises
@@ -735,7 +739,6 @@ df_bookings %>%
 
 Untersuche weitere, noch nicht beleuchtete Zusammenhänge in den Daten und dokumentiere (a) deine Hypothese, (b) die gefundenen Zusammenhängen präzise in Worten.
 
-```{r}
 #Logan
 #Thema 1: IsRepeatedGuest && BookingCancelled Zusammenhänge // gleiches für PreviousCancellations
 #Hypothese 1: 
@@ -743,7 +746,7 @@ Untersuche weitere, noch nicht beleuchtete Zusammenhänge in den Daten und dokum
 
 #Noah
 #Thema 2: Umsatzanalyse
-#Hypothese 2:
+#Hypothese 2: We have seen that prices vary seasonally. Now we would like to find out if the season has an influence on the sales.
 #Analyse 2:
 
 #Noah
@@ -755,6 +758,50 @@ Untersuche weitere, noch nicht beleuchtete Zusammenhänge in den Daten und dokum
 #Thema 4: DaysInWaitingList (inkl. Buchungsanalyse)
 #Hypothese 4:
 #Analyse 4:
+
+Hypothesis: In the year 2016 the AverageDailyRate had a peak in the Summer season. We want to find out, if the season has a direct impact on the room prices.
+
+Analysis: In the Graph below we can see, that the AverageDailyRate per RoomType differs between the seasons, however, the pattern for the seasons look very similar. For this reason we can asume, that the season of the year has a direct impact on the room prices.
+
+```{r}
+df_bookings %>% 
+  filter(AssignedRoomType != "L") %>%   #Remove RoomType "L" because it has only one value which is too little
+  group_by(AssignedRoomType, AverageDailyRate) %>% 
+  summarise(Season = case_when(ArrivalDateMonth == "January" | ArrivalDateMonth == "February" | ArrivalDateMonth == "December" ~ "Winter", ArrivalDateMonth == "March" | ArrivalDateMonth == "April" | ArrivalDateMonth == "May" ~ "Spring", ArrivalDateMonth == "June" | ArrivalDateMonth == "July" | ArrivalDateMonth == "August" ~ "Summer", ArrivalDateMonth == "September" | ArrivalDateMonth == "October" | ArrivalDateMonth == "November" ~ "Autumn")) %>% 
+  group_by(Season, AssignedRoomType) %>% 
+  summarise(AverageDailyRate = mean(AverageDailyRate)) %>% 
+  ggplot(aes(x = AssignedRoomType, y = AverageDailyRate, color = Season, group = Season)) +
+  geom_line()
+```
+
+
+Hypothesis: We have seen that prices vary seasonally. Now we would like to find out if the season has an influence on the revenue.
+
+Analysis: In the graph 1 we can see that the summer months are the most profitable for the hotel. By further investigating, we can see in graph 2 that the summer months July and August also have the most visitors. This also seem to correlate with Average Daily Rate in the year 2016. Because the demand for rooms is higher in the summer months, the hotel can charge the willing customer more and the revenue skyrockets.
+
+```{r}
+df_bookings %>%
+  filter(BookingCancelled == 'No') %>% 
+  group_by(ArrivalDateMonth) %>% 
+  summarise(monthly_revenue = sum(Price)) %>% 
+  ggplot(aes(x = ArrivalDateMonth, y = monthly_revenue)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5))
+```
+```{r}
+df_bookings %>%
+  filter(BookingCancelled == 'No') %>% 
+  group_by(ArrivalDateMonth) %>% 
+  summarise(monthly_visitors = n()) %>% 
+  ggplot(aes(x = ArrivalDateMonth, y = monthly_visitors)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5))
+```
+```{r}
+df_bookings %>% filter(AssignedRoomType != "L") %>% group_by(AssignedRoomType, AverageDailyRate) %>% summarise(Season = case_when(ArrivalDateMonth == "January" | ArrivalDateMonth == "February" | ArrivalDateMonth == "December" ~ "Winter", ArrivalDateMonth == "March" | ArrivalDateMonth == "April" | ArrivalDateMonth == "May" ~ "Spring", ArrivalDateMonth == "June" | ArrivalDateMonth == "July" | ArrivalDateMonth == "August" ~ "Summer", ArrivalDateMonth == "September" | ArrivalDateMonth == "October" | ArrivalDateMonth == "November" ~ "Autumn")) %>% 
+  group_by(Season, AssignedRoomType) %>% summarise(AverageDailyRate = mean(AverageDailyRate)) %>% 
+  ggplot(aes(x = AssignedRoomType, y = AverageDailyRate, color = Season, group = Season)) +
+  geom_line()
 ```
 
 
@@ -766,9 +813,5 @@ plot_histogram(df_bookings)
 
 ggplot(df_bookings, aes(x = AverageDailyRate, y = LeadTime)) +
   geom_point()
-```
-```{r}
-
-```
 ```
 
