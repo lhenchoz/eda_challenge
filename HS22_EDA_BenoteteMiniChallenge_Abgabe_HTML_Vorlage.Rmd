@@ -1,5 +1,5 @@
 ---
-title: "EDA HS22 - Mini-Challenge: Hotelbuchungen"
+title: 'EDA HS22 - Mini-Challenge: Hotelbuchungen'
 output:
   html_document:
     toc: yes
@@ -116,10 +116,10 @@ library(stringi)
 
 Lade die zu analysierenden Daten.
 
-Hinweis: Verwende für deine Implementierung die Funktion `read.csv()` und das File "H1.csv".
+Hinweis: Verwende für deine Implementierung die Funktion `read.csv()` und das File 'H1.csv'.
 
 ```{r}
-df_bookings_raw <- read.csv("./H1.csv")
+df_bookings_raw <- read.csv('./H1.csv')
 ```
 
 ## Aufgabe (1 Punkt): Untersuche die Grösse des Data Frames
@@ -155,7 +155,9 @@ Bestimme wieviele doppelte Beobachtungen im Data Frame auftauchen.
 Hinweis: Aufgrund fehlender Hintergrundinformationen werden für die nächsten Schritte zunächst keine Beobachtungen entfernt, auch wenn im Datensatz viel redundante Informationen vorhanden sind!
 
 ```{r}
-df_bookings_raw %>% filter(duplicated(df_bookings_raw)) %>% summarise(n_duplicate = n())
+df_bookings_raw %>%
+  filter(duplicated(df_bookings_raw)) %>%
+  summarise(n_duplicate = n())
 ```
 
 ## Aufgabe (10 Punkte): Identifiziere Gruppen doppelter Beobachtungen
@@ -166,7 +168,10 @@ Hinweis: Aufgrund fehlender Hintergrundinformationen werden für die nächsten S
 
 ```{r}
 df_bookings_raw %>%
-  add_count(across(everything()), sort = TRUE, name = "Number_of_duplicates") %>% filter(Number_of_duplicates>1) %>% distinct() %>% head(4)
+  add_count(across(everything()), sort = TRUE, name = 'Number_of_duplicates') %>%
+  filter(Number_of_duplicates > 1) %>%
+  distinct() %>%
+  head(4)
 ```
 
 # Daten transformieren
@@ -180,7 +185,7 @@ Die folgenden Attribute sind neu zu benennen (alterName -\> neuerName)
 -   IsCanceled -\> BookingCancelled
 
 ```{r}
-df_bookings <- df_bookings_raw %>% 
+df_bookings <- df_bookings_raw %>%
   rename(
     TotalSpecialRequests = TotalOfSpecialRequests,
     AverageDailyRate = ADR,
@@ -195,7 +200,7 @@ Entferne *gleichzeitig für alle* character-wertigen Attribute, die Leerzeichen,
 Hinweis: Verwende für deine Implementierung die Funktion `across()` und den Post [Umgang mit textuellen Daten mit tidyverse's stringr](https://spaces.technik.fhnw.ch/spaces/explorative-datenanalyse/beitraege/umgang-mit-textuellen-daten-mit-tidyverses-stringr).
 
 ```{r}
-df_bookings <- df_bookings %>% 
+df_bookings <- df_bookings %>%
   mutate(across(where(is.character), str_trim))
 ```
 
@@ -204,30 +209,32 @@ df_bookings <- df_bookings %>%
 Untersuche allfällige fehlende Informationen (NAs) im Data Frame und zähle wieviele NAs vorkommen.
 
 ```{r}
-#Unvollständige Observationen
-df_bookings %>%  filter(!complete.cases(.))
+# Unvollständige Observationen
+df_bookings %>% filter(!complete.cases(.))
 
-#Anzahl NAs
-df_bookings %>% is.na %>% sum()
+# Anzahl NAs
+df_bookings %>%
+  is.na() %>%
+  sum()
 ```
 
-## Aufgabe (3 Punkte): Ersetze "NULL" Werte
+## Aufgabe (3 Punkte): Ersetze 'NULL' Werte
 
-Ersetze *gleichzeitig alle* Werte "NULL" für die Attribute "Company" und "Agent" durch `NA` und und zähle wieviele NAs in jedem der beiden Attributen vorkommen.
+Ersetze *gleichzeitig alle* Werte 'NULL' für die Attribute 'Company' und 'Agent' durch `NA` und und zähle wieviele NAs in jedem der beiden Attributen vorkommen.
 
 ```{r}
 df_bookings <- df_bookings %>%
-   mutate(across(c("Company", "Agent"), ~na_if(., "NULL")))
+  mutate(across(c('Company', 'Agent'), ~ na_if(., 'NULL')))
 sum(is.na(df_bookings$Company))
 sum(is.na(df_bookings$Agent))
 ```
 
 ## Aufgabe (4 Punkte): Ersetze Abkürzungen
 
-Ersetze *gleichzeitig* für die Attribute "MarketSegment" und "DistributionChannel" die Abkürzungen
+Ersetze *gleichzeitig* für die Attribute 'MarketSegment' und 'DistributionChannel' die Abkürzungen
 
--   "TA" durch "Tour Agent",
--   "TO" durch "Tour Operator".
+-   'TA' durch 'Tour Agent',
+-   'TO' durch 'Tour Operator'.
 
 Hinweis: Verwende für deine Implementierung die Funktion `gsub()` oder Ähnliches.
 
@@ -237,42 +244,48 @@ df_bookings <- df_bookings %>% mutate_at(vars(c('MarketSegment', 'DistributionCh
 
 ## Aufgabe (4 Punkte): Ersetze weitere Abkürzungen
 
-Ersetze für das Attribut "Meal" die verwendeten Abkürzungen
+Ersetze für das Attribut 'Meal' die verwendeten Abkürzungen
 
--   "BB" durch "Bed & Breakfast",
--   "HB" durch "Half board",
--   "FB" durch "Full board",
--   "Undefined" durch "kein Paket".
+-   'BB' durch 'Bed & Breakfast',
+-   'HB' durch 'Half board',
+-   'FB' durch 'Full board',
+-   'Undefined' durch 'kein Paket'.
 
-Ersetze weiter für die Attribute "BookingCancelled" und "IsRepeatedGuest" die Werte 1 durch "Yes" und 0 durch "No".
+Ersetze weiter für die Attribute 'BookingCancelled' und 'IsRepeatedGuest' die Werte 1 durch 'Yes' und 0 durch 'No'.
 
 ```{r}
-df_bookings$Meal <- gsub('BB', 'Bed & Breakfast',
-          gsub('HB', 'Half board',
-            gsub('FB', 'Full board',
-              gsub('Undefined', 'kein Paket', df_bookings$Meal))))
+df_bookings$Meal <- gsub(
+  'BB', 'Bed & Breakfast',
+  gsub(
+    'HB', 'Half board',
+    gsub(
+      'FB', 'Full board',
+      gsub('Undefined', 'kein Paket', df_bookings$Meal)
+    )
+  )
+)
 
 df_bookings <- df_bookings %>% mutate_at(vars(c('BookingCancelled', 'IsRepeatedGuest')), ~ str_replace_all(., c('1' = 'Yes', '0' = 'No')))
 ```
 
 ## Aufgabe (6 Punkte): Erstelle Datumsvariablen
 
-Erstelle Datumsvariablen für Reservation und Ankunft aufgrund der Informationen "ReservationStatusDate" bzw. "ArrivalDateYear", "ArrivalDateYear", "ArrivalDateDayOfMonth".
+Erstelle Datumsvariablen für Reservation und Ankunft aufgrund der Informationen 'ReservationStatusDate' bzw. 'ArrivalDateYear', 'ArrivalDateYear', 'ArrivalDateDayOfMonth'.
 
-Hinweis: Verwende für deine Implementierung die library `lubridate` und Informationen aus [R for Data Science, Chapter "Dates and times"](https://r4ds.had.co.nz/dates-and-times.html) sowie die Posts [Umgang mit Datumsinformationen](https://spaces.technik.fhnw.ch/spaces/explorative-datenanalyse/beitraege/umgang-mit-datumsinformationen) und [Umgang mit textuellen Daten mit tidyverse's stringr](https://spaces.technik.fhnw.ch/spaces/explorative-datenanalyse/beitraege/umgang-mit-textuellen-daten-mit-tidyverses-stringr).
+Hinweis: Verwende für deine Implementierung die library `lubridate` und Informationen aus [R for Data Science, Chapter 'Dates and times'](https://r4ds.had.co.nz/dates-and-times.html) sowie die Posts [Umgang mit Datumsinformationen](https://spaces.technik.fhnw.ch/spaces/explorative-datenanalyse/beitraege/umgang-mit-datumsinformationen) und [Umgang mit textuellen Daten mit tidyverse's stringr](https://spaces.technik.fhnw.ch/spaces/explorative-datenanalyse/beitraege/umgang-mit-textuellen-daten-mit-tidyverses-stringr).
 
 ```{r}
-df_bookings <- df_bookings %>% mutate(ArrivalDate = ymd(str_c(ArrivalDateYear, ArrivalDateMonth, ArrivalDateDayOfMonth, sep = "-")), ReservationStatusDate = ymd(ReservationStatusDate))
+df_bookings <- df_bookings %>% mutate(ArrivalDate = ymd(str_c(ArrivalDateYear, ArrivalDateMonth, ArrivalDateDayOfMonth, sep = '-')), ReservationStatusDate = ymd(ReservationStatusDate))
 ```
 
 ## Aufgabe (3 Punkte): Bilde Faktoren
 
-Konvertiere sämtliche kategorialen Variablen und mache daraus Faktoren und überprüfe die Datentypen der konvertierten Variablen für die Variablen "BookingCancelled" und "DepositType".
+Konvertiere sämtliche kategorialen Variablen und mache daraus Faktoren und überprüfe die Datentypen der konvertierten Variablen für die Variablen 'BookingCancelled' und 'DepositType'.
 
 Hinweis: Verwende für deine Implementierung `across()` und eine bestehende R Basis-Funktion zur Prüfung der erfolgreichen Bildung der Faktoren.
 
 ```{r}
-df_bookings <- df_bookings %>% mutate(across(c('BookingCancelled', 'Meal', 'Country', 'MarketSegment', 'DistributionChannel', 'IsRepeatedGuest', 'ReservedRoomType', 'AssignedRoomType', 'DepositType', 'Agent', 'Company', 'CustomerType', 'ReservationStatus'), as.factor))
+df_bookings <- df_bookings %>% mutate(across(c('BookingCancelled', 'Meal', 'Country', 'MarketSegment', 'ArrivalDateMonth', 'DistributionChannel', 'IsRepeatedGuest', 'ReservedRoomType', 'AssignedRoomType', 'DepositType', 'Agent', 'Company', 'CustomerType', 'ReservationStatus'), as.factor))
 typeof(df_bookings$BookingCancelled)
 typeof(df_bookings$DepositType)
 ```
@@ -281,63 +294,71 @@ typeof(df_bookings$DepositType)
 
 Erstelle neue Variablen, welche Auskunft geben über
 
--   die Anzahl Logiernächte pro Buchung -\> neue Variable "TotalNights" als Summe der Anzahl Nächte an Wochentagen ("StaysInWeekNights) und Wochenendtagen ("StaysInWeekendNights"),
--   die Anzahl Personen pro Buchung -\> neue Variable "GroupSize" als Summe von "Adults", "Children" und "Babies",
--   den bezahlte Preis pro Aufenthalt -\> neue Variable "Price" gebildet als Produkt von "AverageDailyRate" und "TotalNights".
+-   die Anzahl Logiernächte pro Buchung -\> neue Variable 'TotalNights' als Summe der Anzahl Nächte an Wochentagen ('StaysInWeekNights) und Wochenendtagen ('StaysInWeekendNights'),
+-   die Anzahl Personen pro Buchung -\> neue Variable 'GroupSize' als Summe von 'Adults', 'Children' und 'Babies',
+-   den bezahlte Preis pro Aufenthalt -\> neue Variable 'Price' gebildet als Produkt von 'AverageDailyRate' und 'TotalNights'.
 
-Erstelle daraus abgeleitet weitere Attribute für die Art des Aufenthalts (neue Faktor-Variable "StayType"):
+Erstelle daraus abgeleitet weitere Attribute für die Art des Aufenthalts (neue Faktor-Variable 'StayType'):
 
--   "Long stay" definiert als Aufenthalt von mehr als 7 Nächten,
--   "Full week" definiert als Aufenthalt von 7 Nächten,
--   "Week stay" definiert als Aufenthalt von weniger als 7 Tagen ohne Wochenendübernachtungen,
--   "Weeked only" definiert als eintägiger Aufenthalt mit einer Wochenendübernachtung,
--   "Long weekend" definiert als zweitägiger Aufenthalt mit zwei Wochenendübernachtungen,
+-   'Long stay' definiert als Aufenthalt von mehr als 7 Nächten,
+-   'Full week' definiert als Aufenthalt von 7 Nächten,
+-   'Week stay' definiert als Aufenthalt von weniger als 7 Tagen ohne Wochenendübernachtungen,
+-   'Weeked only' definiert als eintägiger Aufenthalt mit einer Wochenendübernachtung,
+-   'Long weekend' definiert als zweitägiger Aufenthalt mit zwei Wochenendübernachtungen,
 
-sowie den Haushaltstyp (neue Faktor-Variable "HouseholdType"):
+sowie den Haushaltstyp (neue Faktor-Variable 'HouseholdType'):
 
--   "Single" definiert als Buchung für genau eine Erwachsene,
--   "Couple" definiert als Buchung für genau zwei Erwachsene,
--   "Single Parent" definiert als Buchung für eine Erwachsene und ein oder mehrere Kinder oder Babies,
--   "Family" definiert als Buchung für zwei Erwachsene und ein oder mehrere Kinder oder Babies,
--   "Group" definiert als Buchung für mehr als zwei Erwachsene (mit oder ohne Kinder / Babies),
+-   'Single' definiert als Buchung für genau eine Erwachsene,
+-   'Couple' definiert als Buchung für genau zwei Erwachsene,
+-   'Single Parent' definiert als Buchung für eine Erwachsene und ein oder mehrere Kinder oder Babies,
+-   'Family' definiert als Buchung für zwei Erwachsene und ein oder mehrere Kinder oder Babies,
+-   'Group' definiert als Buchung für mehr als zwei Erwachsene (mit oder ohne Kinder / Babies),
 
 ```{r}
 df_bookings <- df_bookings %>% mutate(TotalNights = StaysInWeekNights + StaysInWeekendNights, GroupSize = Adults + Children, Price = AverageDailyRate * TotalNights)
 
-df_bookings <- df_bookings %>% mutate(StayType = case_when(TotalNights > 7 ~ 'Long stay',
-                                                           TotalNights == 7 ~ 'Full week',
-                                                           TotalNights < 7 & StaysInWeekendNights == 0 ~ 'Week stay',
-                                                           StaysInWeekendNights == 1 ~ 'Weekend only',
-                                                           StaysInWeekendNights == 2 ~ 'Long weekend')) %>% mutate(StayType = as.factor(StayType))
+df_bookings <- df_bookings %>%
+  mutate(StayType = case_when(
+    TotalNights > 7 ~ 'Long stay',
+    TotalNights == 7 ~ 'Full week',
+    TotalNights < 7 & StaysInWeekendNights == 0 ~ 'Week stay',
+    StaysInWeekendNights == 1 ~ 'Weekend only',
+    StaysInWeekendNights == 2 ~ 'Long weekend'
+  )) %>%
+  mutate(StayType = as.factor(StayType))
 
-df_bookings <- df_bookings %>% mutate(HouseholdType = case_when(Adults == 1 & Children == 0 & Babies == 0 ~ 'Single',
-                                                           Adults == 2 & Children == 0 & Babies == 0 ~ 'Couple',
-                                                           Adults == 1 & (Children > 0 | Babies > 0) ~ 'Single Parent',
-                                                           Adults == 2 & (Children > 0 | Babies > 0) ~ 'Family',
-                                                           Adults > 2 ~ 'Group')) %>% mutate(HouseholdType = as.factor(HouseholdType))
+df_bookings <- df_bookings %>%
+  mutate(HouseholdType = case_when(
+    Adults == 1 & Children == 0 & Babies == 0 ~ 'Single',
+    Adults == 2 & Children == 0 & Babies == 0 ~ 'Couple',
+    Adults == 1 & (Children > 0 | Babies > 0) ~ 'Single Parent',
+    Adults == 2 & (Children > 0 | Babies > 0) ~ 'Family',
+    Adults > 2 ~ 'Group'
+  )) %>%
+  mutate(HouseholdType = as.factor(HouseholdType))
 ```
 
 # Summarische Statistiken erzeugen
 
 ## Aufgabe (3 Punkte): Erstelle Häufigkeitstabellen
 
-Gib für die beiden oben bearbeiteten Attribute "MarketSegment" und "DistributionChannel" je eine separate Häufigkeitstabelle aus.
+Gib für die beiden oben bearbeiteten Attribute 'MarketSegment' und 'DistributionChannel' je eine separate Häufigkeitstabelle aus.
 
 Hinweis: Verwende für deine Implementierung nur **einen** Aufruf der Funktion `summary()`.
 
 ```{r}
-summary(df_bookings[c('MarketSegment','DistributionChannel')])
+summary(df_bookings[c('MarketSegment', 'DistributionChannel')])
 ```
 
 ## Aufgabe (3 Punkte): Erstelle weitere Häufigkeitstabellen
 
-Gib für die Attribute "Meal" und "IsRepeatedGuest" separat tabellarische Häufigkeitsverteilungen aus.
+Gib für die Attribute 'Meal' und 'IsRepeatedGuest' separat tabellarische Häufigkeitsverteilungen aus.
 
 Hinweis: Verwende für deine Implementierung die Funktion `kable()`.
 
 ```{r}
 kable(proportions(summary(df_bookings$Meal)), caption = 'Meal', digits = 2, col.names = 'Frequency')
-kable(proportions(summary(df_bookings$IsRepeatedGuest)), caption = "IsRepeatedGuest", digits = 2, col.names = 'Frequency')
+kable(proportions(summary(df_bookings$IsRepeatedGuest)), caption = 'IsRepeatedGuest', digits = 2, col.names = 'Frequency')
 ```
 
 ## Aufgabe (5 Punkte): Erstelle weitere Häufigkeitstabellen
@@ -350,12 +371,12 @@ summary(df_bookings)
 
 ## Aufgabe (4 Punkte): Prüfe Auffälligkeiten
 
-Erstelle eine tabellarische Häufigkeitsverteilung für das neu gebildete Attribut "HouseholdType" und untersuche und beschreibe Auffälligkeiten.
+Erstelle eine tabellarische Häufigkeitsverteilung für das neu gebildete Attribut 'HouseholdType' und untersuche und beschreibe Auffälligkeiten.
 
 Hinweis: Verwende für deine Implementierung die Funktion `kable()`.
 
 ```{r}
-kable(proportions(summary(df_bookings$HouseholdType)), caption = "HouseholdType", digits = 5, col.names = '%')
+kable(proportions(summary(df_bookings$HouseholdType)), caption = 'HouseholdType', digits = 5, col.names = '%')
 df_bookings %>% filter(is.na(HouseholdType))
 ```
 Analysis:
@@ -364,28 +385,30 @@ In total there are 13 NAs. By filtering the column for NAs, we can see that adul
 
 ## Aufgabe (3 Punkte): Prüfe weitere Auffälligkeiten
 
-Erstelle eine Statistik für das Attribut "AverageDailyRate" und identifiziere Auffälligkeiten.
+Erstelle eine Statistik für das Attribut 'AverageDailyRate' und identifiziere Auffälligkeiten.
 
 ```{r}
 summary(df_bookings$AverageDailyRate)
-df_bookings %>%  filter(AverageDailyRate < 0)
-df_bookings %>%  filter(AverageDailyRate == 0)
+df_bookings %>% filter(AverageDailyRate < 0)
+df_bookings %>% filter(AverageDailyRate == 0)
 ```
 Analysis:
 First we saw, that there is an observation with a negative value, which is invalid because it is not possible that customers pay a negative price for the hotel. Also we saw some observation with an average daily rate of 0, which we think is possible because there may be some customers with a coupon.
 
 ## Aufgabe (2 Punkte): Erstelle einen bereinigten Datensatz
 
-Bereinige das Data Frame, indem du Beobachtungen mit Auffälligkeiten und unplausiblen Werten in den Attributen "AverageDailyRate" und "HouseholdType" entfernst.
+Bereinige das Data Frame, indem du Beobachtungen mit Auffälligkeiten und unplausiblen Werten in den Attributen 'AverageDailyRate' und 'HouseholdType' entfernst.
 
 &nbsp;
 
 **FÜR ALLE WEITEREN ANALYSEN IST AUSSCHLIESSLICH DER BEREINIGTE DATENSATZ ZU VERWENDEN!!!**
 
 ```{r}
-df_bookings <- df_bookings %>% subset(AverageDailyRate > 0) %>% drop_na(HouseholdType)
-#df_bookings <- df_bookings %>% 
-  #(AverageDailyRate = replace(AverageDailyRate, AverageDailyRate <= 0, mean(AverageDailyRate, na.rm = TRUE)))
+df_bookings <- df_bookings %>%
+  subset(AverageDailyRate > 0) %>%
+  drop_na(HouseholdType)
+# df_bookings <- df_bookings %>%
+# (AverageDailyRate = replace(AverageDailyRate, AverageDailyRate <= 0, mean(AverageDailyRate, na.rm = TRUE)))
 ```
 
 # Visualisierung
@@ -394,17 +417,21 @@ df_bookings <- df_bookings %>% subset(AverageDailyRate > 0) %>% drop_na(Househol
 
 ## Aufgabe (5 Punkte): Analysiere Zusammenhänge kategorialer Grössen
 
-Erstelle eine graphische Analyse, welche die relativen Unterschiede des Auftretens von Spezialwünschen (s. "TotalSpecialRequests") bei Hotelreservationen nach Haushaltstyp (s. "HouseholdType") untersucht und zusätzlich betrachtet, ob die Buchung storniert wurde oder nicht (s. "BookingCancelled").
+Erstelle eine graphische Analyse, welche die relativen Unterschiede des Auftretens von Spezialwünschen (s. 'TotalSpecialRequests') bei Hotelreservationen nach Haushaltstyp (s. 'HouseholdType') untersucht und zusätzlich betrachtet, ob die Buchung storniert wurde oder nicht (s. 'BookingCancelled').
 
 Hinweis: Verwende für deine Implementierung die Funktion `facet_wrap(, labeller = ...)`.
 
 ```{r}
-ggplot(df_bookings, aes(HouseholdType, TotalSpecialRequests)) + 
-  stat_summary(fun = "mean", geom = "bar") + 
-  facet_wrap(~BookingCancelled, ncol = 2, labeller = labeller(BookingCancelled = 
-    c("No" = "Not cancelled bookings",
-      "Yes" = "Cancelled bookings"))) +
-  labs(x = "Household types", y = "Mean of special requests")
+ggplot(df_bookings, aes(HouseholdType, TotalSpecialRequests)) +
+  stat_summary(fun = 'mean', geom = 'bar') +
+  facet_wrap(~BookingCancelled, ncol = 2, labeller = labeller(
+    BookingCancelled =
+      c(
+        'No' = 'Not cancelled bookings',
+        'Yes' = 'Cancelled bookings'
+      )
+  )) +
+  labs(x = 'Household types', y = 'Mean of special requests')
 ```
 
 ## Aufgabe (5 Punkte): Erstelle eine visuelle Häufigkeitstabelle
@@ -414,14 +441,13 @@ Erstelle eine Heatmap, welche das Vorkommen von Art des Aufenthalts und Haushalt
 Hinweis: Verwende für deine Implementierung die Funktion `geom_tile()` und eine Farbskala, welche grosse Häufigkeiten dunkler einfärbt als kleine.
 
 ```{r}
-#TODO Logscale beschriften
-options(dplyr.summarise.inform = FALSE)
+# TODO Logscale beschriften
 df_bookings %>%
   group_by(StayType, HouseholdType) %>%
-  summarize(Freq=n()) %>% 
+  summarize(Freq = n()) %>%
   ggplot(aes(StayType, HouseholdType, fill = Freq)) +
   geom_tile() +
-  geom_text(aes(label = Freq), color = "black", size = 4) +
+  geom_text(aes(label = Freq), color = 'black', size = 4) +
   scale_fill_gradient2(trans = 'log', high = '#004A96')
 ```
 
@@ -433,57 +459,127 @@ Hinweis: Verwende für deine Implementierung die Funktion `geom_mosaic()` aus de
 
 ```{r}
 ggplot(df_bookings) +
-  geom_mosaic(aes(x = product(StayType), fill = HouseholdType)) + 
-  theme_mosaic()+ 
+  geom_mosaic(aes(x = product(StayType), fill = HouseholdType)) +
+  theme_mosaic() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5))
 ```
 
 ## Aufgabe (10 Punkte): Analysiere die Definition des Tagesdurchschnittpreises
 
-Plausibilisiere visuell, dass die Angaben des Attributs Tagesdurchschnittpreis ("AverageDailyRate") sich nicht auf den Preis pro Übernachtung und Person, sondern auf den Preis pro Übernachtung pro Zimmer beziehen.
+Plausibilisiere visuell, dass die Angaben des Attributs Tagesdurchschnittpreis ('AverageDailyRate') sich nicht auf den Preis pro Übernachtung und Person, sondern auf den Preis pro Übernachtung pro Zimmer beziehen.
 
 Hinweis: Die Visualisierung ist kein abschliessender Beweis. Beschreibe klar und nachvollziehbar, wieso die von dir gezeigte Grafik ein Indiz dafür ist, dass sich die gelisteten Tagesdurchschnittpreise auf Übernachtungen pro Zimmer beziehen.
 
+
 ```{r}
-ggplot(df_bookings, aes(GroupSize, AverageDailyRate)) + 
-  stat_summary(fun = "mean", geom = "point")
-ggplot(df_bookings, aes(reorder(AssignedRoomType, AverageDailyRate), AverageDailyRate)) + 
-  stat_summary(fun = "mean", geom = "point")
+ggplot(df_bookings, aes(GroupSize, Price)) +
+  stat_summary(fun = 'mean', geom = 'point')
+df_bookings %>% filter(BookingCancelled == "No" & Meal == "Half board") %>% 
+  ggplot(aes(AssignedRoomType, AverageDailyRate)) +
+  stat_summary(fun = 'mean', geom = 'point')
+df_bookings %>% filter(BookingCancelled == "No" & ArrivalDate < "2016-05-15" & ArrivalDate > "2016-01-01") %>% 
+  ggplot(aes(AssignedRoomType, AverageDailyRate)) +
+  stat_summary(fun = 'mean', geom = 'point')
+```
+
+
+```{r}
+ggplot(df_bookings, aes(GroupSize, AverageDailyRate)) +
+  stat_summary(fun = 'mean', geom = 'point')
+ggplot(df_bookings, aes(reorder(AssignedRoomType, AverageDailyRate), AverageDailyRate)) +
+  stat_summary(fun = 'mean', geom = 'point')
 ggplot(df_bookings, aes(TotalNights, Price)) +
-  stat_summary(fun = "median", geom = "point")
+  stat_summary(fun = 'median', geom = 'point')
 ggplot(df_bookings, aes(TotalNights, Price, color = AssignedRoomType)) +
-  stat_summary(fun = "mean", geom = "point")
+  stat_summary(fun = 'mean', geom = 'point')
 ggplot(df_bookings, aes(TotalNights, Price)) +
   geom_point(aes(fill = AssignedRoomType, color = AssignedRoomType))
 ggplot(df_bookings, aes(TotalNights, Price)) +
-  stat_summary(fun = "mean", geom = "point")
+  stat_summary(fun = 'mean', geom = 'point')
 ```
 
 ## Aufgabe (10 Punkte): Plausibilisiere Interpretation des Tagesdurchschnittpreises
 
-Identifiziere drei Fälle, welche illustrieren, dass die Angaben des Attributs Tagesdurchschnittpreis ("AverageDailyRate") sich auf den Preis pro Übernachtung pro Zimmer beziehen, indem du gezielt paarweise Buchungen vergleichst, wo sich Anzahl Personen und Tagesdurchschnittpreis unterscheiden, andere relevante Variablen aber übereinstimmen.
+Identifiziere drei Fälle, welche illustrieren, dass die Angaben des Attributs Tagesdurchschnittpreis ('AverageDailyRate') sich auf den Preis pro Übernachtung pro Zimmer beziehen, indem du gezielt paarweise Buchungen vergleichst, wo sich Anzahl Personen und Tagesdurchschnittpreis unterscheiden, andere relevante Variablen aber übereinstimmen.
 
-Gib für diese drei Fälle folgende Attribute aus: "GroupSize.x", "GroupSize.y", "AverageDailyRate.x", "AverageDailyRate.y" (die Endung ".x" bezieht sich auf das Attribut der ersten, ".y" der zweiten Beobachtung der paarweisen Buchung).
+Gib für diese drei Fälle folgende Attribute aus: 'GroupSize.x', 'GroupSize.y', 'AverageDailyRate.x', 'AverageDailyRate.y' (die Endung '.x' bezieht sich auf das Attribut der ersten, '.y' der zweiten Beobachtung der paarweisen Buchung).
 
 Hinweis: Exploriere Beispiele von Hand und mache dann ein Refactoring deines Codes, d.h. verwende für deine Implementierung eine eigene Funktion mit `{{}}`, so dass eine wählbare Menge zufälliger Beispiele selektiert werden kann.
 
 ```{r}
+picker <- function(amount) {
+  sample <- df_bookings[sample(nrow(df_bookings), {{amount}}),] #select the amount of samples required
+  df_out <- NULL                                                #by (amount)
 
+  for (i in c(1:nrow(sample))) {                                #iterate through all samples and search
+    sample_filtered <- df_bookings %>%                          #for matching ones
+      filter(GroupSize != as.integer(sample[i,]["GroupSize"])) %>% #filter important feature required
+      filter(AverageDailyRate != as.double(sample[i,]["AverageDailyRate"])) %>%
+      filter(TotalNights == as.integer(sample[i,]["TotalNights"])) %>%
+      filter(AssignedRoomType == sample[i,20]) %>%
+      filter(BookingCancelled == sample[i,1]) %>%
+      filter(ArrivalDate != sample[i,32]) %>%
+      filter(TotalSpecialRequests == sample[i,29])
+    
+    sample_filtered <- sample_filtered[sample(nrow(sample_filtered), 1),] #from rows that match sample
+    sample$Pair <- i                                                      #requirements, select one random
+    sample_filtered$Pair <- i
+    
+    if (nrow(sample_filtered) == 0) {       #this is in case that we don't find matching, then we
+      temp <- picker(1)                     #relaunch the function recursively and search for new sample
+      sample_filtered <- temp[2,]           #and match
+      sample[i,] <- temp[1,]
+    }
+    
+    df_temp <- NULL
+    
+    df_temp <- df_temp %>%                  #this is for formating the df to the required format
+      cbind(sample[i,34]) %>%
+      cbind(sample_filtered[1,34]) %>%
+      cbind(sample[i,27]) %>%
+      cbind(sample_filtered[1,27])
+      
+    df_out <- df_out %>%
+        rbind(df_temp)
+  }
+  
+  df_out <- as.data.frame(df_out)
+
+  df_out <- df_out %>% 
+    rename(
+      "GroupSize.x" = "V1",
+      "GroupSize.y" = "V2",
+      "AverageDailyRate.x" = "V3",
+      "AverageDailyRate.y" = "V4"
+      )
+
+  print(df_out)
+}
+
+picker(3)
+
+#in einem Beispiel hatten wir als Daten:
+#GroupSize.x GroupSize.y AverageDailyRate.x AverageDailyRate.y
+#2	1   112.7	  81.6	
+#2	1	  48.0	  43.0	
+#4	3 	94.0	  162.0
+#man seht klar, dass die Gruppengrösse nicht mit der Dailyrate zusammenhängt
 ```
 
 ## Aufgabe (5 Punkte): Erstelle Facet-Plot des Tagesdurchschnittpreises
 
-Reproduziere die folgende Grafik ("Figure 1: AverageDailyRate_2016_RoomA") für die Verteilung der monatlichen Tagesdurchschnittpreise ("AverageDailyRate") von Zimmern mit AssignedRoomType "A" für das Jahr 2016 mit allen gezeigten Details.
+Reproduziere die folgende Grafik ('Figure 1: AverageDailyRate_2016_RoomA') für die Verteilung der monatlichen Tagesdurchschnittpreise ('AverageDailyRate') von Zimmern mit AssignedRoomType 'A' für das Jahr 2016 mit allen gezeigten Details.
 
 ![AverageDailyRate_2016_RoomA](./AverageDailyRate_2016_RoomA.png)
 
 ```{r}
-df_bookings %>% filter(ArrivalDateYear == 2016, AssignedRoomType == "A") %>% 
+df_bookings %>%
+  filter(ArrivalDateYear == 2016, AssignedRoomType == 'A') %>%
   ggplot(aes(AverageDailyRate)) +
   geom_histogram(aes(fill = ArrivalDateMonth)) +
-  facet_wrap(~ ArrivalDateMonth, ncol = 3) +
+  facet_wrap(~ArrivalDateMonth, ncol = 3) +
   theme(legend.position = 'none') +
-  labs(title = "Distribution of Average Daily Rate per month for 2016", subtitle = '(Bookings of Assigned Room Type A only)', x = 'Average Daily Rate [EURO]', y = 'Bookings') 
+  labs(title = 'Distribution of Average Daily Rate per month for 2016', subtitle = '(Bookings of Assigned Room Type A only)', x = 'Average Daily Rate [EURO]', y = 'Bookings')
 ```
 
 ## Aufgabe (5 Punkte): Verbessere Facet-Plot des Tagesdurchschnittpreises
@@ -491,81 +587,86 @@ df_bookings %>% filter(ArrivalDateYear == 2016, AssignedRoomType == "A") %>%
 Verbessere die vorangehende Grafik so, dass die Reihenfolge der Monate chronologisch geordnet ist.
 
 ```{r}
-df_bookings$ArrivalDateMonth <- factor(df_bookings$ArrivalDateMonth, levels=c("January","February","March","April","May","June","July","August","September","October","November","December"))
-df_bookings %>% filter(ArrivalDateYear == 2016, AssignedRoomType == "A") %>% 
+df_bookings$ArrivalDateMonth <- factor(df_bookings$ArrivalDateMonth, levels = c('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'))
+df_bookings %>%
+  filter(ArrivalDateYear == 2016, AssignedRoomType == 'A') %>%
   ggplot(aes(AverageDailyRate)) +
   geom_histogram(aes(fill = ArrivalDateMonth)) +
-  facet_wrap(~ ArrivalDateMonth, ncol = 3) +
+  facet_wrap(~ArrivalDateMonth, ncol = 3) +
   theme(legend.position = 'none') +
-  labs(title = "Distribution of Average Daily Rate per month for 2016", subtitle = '(Bookings of Assigned Room Type A only)', x = 'Average Daily Rate [EURO]', y = 'Bookings')
+  labs(title = 'Distribution of Average Daily Rate per month for 2016', subtitle = '(Bookings of Assigned Room Type A only)', x = 'Average Daily Rate [EURO]', y = 'Bookings')
 ```
 
 ## Aufgabe (5 Punkte): Reproduziere Facet-Plot des Tagesdurchschnittpreises
 
-Reproduziere die folgende Grafik ("Figure 2: AverageDailyRate_RoomsACDEFG.png") mit allen gezeigten Details für die Verteilung der Tagesdurchschnittpreise ("AverageDailyRate") von Zimmern mit AssignedRoomType "A", "C", "D", "E", "F" und "G" ohne Beschränkung des Zeitraumes.
+Reproduziere die folgende Grafik ('Figure 2: AverageDailyRate_RoomsACDEFG.png') mit allen gezeigten Details für die Verteilung der Tagesdurchschnittpreise ('AverageDailyRate') von Zimmern mit AssignedRoomType 'A', 'C', 'D', 'E', 'F' und 'G' ohne Beschränkung des Zeitraumes.
 
 ![AverageDailyRate_RoomsACDEFG.png](./AverageDailyRate_RoomsACDEFG.png)
 
 ```{r}
-df_bookings %>%  subset(AssignedRoomType == "A" | AssignedRoomType =="C"| AssignedRoomType =="D"| AssignedRoomType =="E"| AssignedRoomType =="F"| AssignedRoomType =="G") %>%
+df_bookings %>%
+  subset(AssignedRoomType == 'A' | AssignedRoomType == 'C' | AssignedRoomType == 'D' | AssignedRoomType == 'E' | AssignedRoomType == 'F' | AssignedRoomType == 'G') %>%
   ggplot(aes(AverageDailyRate)) +
-  geom_histogram(aes(fill=AssignedRoomType)) +
-  facet_wrap(~AssignedRoomType, ncol = 2, scales = "free_y") +
+  geom_histogram(aes(fill = AssignedRoomType)) +
+  facet_wrap(~AssignedRoomType, ncol = 2, scales = 'free_y') +
   theme(legend.position = 'none') +
-  labs(title = "Distribution of Average Daily Rate per month", x = 'Average Daily Rate [EURO]', y = 'Bookings')
+  labs(title = 'Distribution of Average Daily Rate per month', x = 'Average Daily Rate [EURO]', y = 'Bookings')
 ```
 
 ## Aufgabe (5 Punkte): Vereinfache Facet-Plot des Tagesdurchschnittpreises
 
-Erzeuge für die oben dargestellten Daten nun Boxplots zum Vergleich von Tagesdurchschnittpreisen ("AverageDailyRate") nach Zimmertyp ("AssignedRoomType") und visualisiere die Gruppengrösse mit Hilfe der Fläche der Box.
+Erzeuge für die oben dargestellten Daten nun Boxplots zum Vergleich von Tagesdurchschnittpreisen ('AverageDailyRate') nach Zimmertyp ('AssignedRoomType') und visualisiere die Gruppengrösse mit Hilfe der Fläche der Box.
 
 ```{r}
-df_bookings %>%  subset(AssignedRoomType == "A" | AssignedRoomType =="C"| AssignedRoomType =="D"| AssignedRoomType =="E"| AssignedRoomType =="F"| AssignedRoomType =="G") %>%
-  ggplot(aes(x = AssignedRoomType ,y =AverageDailyRate, fill=AssignedRoomType)) +
+df_bookings %>%
+  subset(AssignedRoomType == 'A' | AssignedRoomType == 'C' | AssignedRoomType == 'D' | AssignedRoomType == 'E' | AssignedRoomType == 'F' | AssignedRoomType == 'G') %>%
+  ggplot(aes(x = AssignedRoomType, y = AverageDailyRate, fill = AssignedRoomType)) +
   geom_boxplot() +
-  facet_wrap(~AssignedRoomType, ncol = 3, scales = "free") +
+  facet_wrap(~AssignedRoomType, ncol = 3, scales = 'free') +
   theme(legend.position = 'none') +
-  labs(title = "Distribution of Average Daily Rate per month", x = 'Assigned Room Type', y = 'Average Daily Rate [EURO]')
+  labs(title = 'Distribution of Average Daily Rate per month', x = 'Assigned Room Type', y = 'Average Daily Rate [EURO]')
 ```
 
 ## Aufgabe (5 Punkte): Untersuche und visualisiere Korrelationen
 
-Berechne die Korrelation nach Bravais-Pearson für die Attribute Preis (Attribut "Price") und Anzahl Übernachtungen (Attribut "TotalNights"). Erstelle weiter ein Streudiagramm für "Price" vs "TotalNights" und integriere im Untertitel die Information der Anzahl Beobachtungen und der berechneten Korrelation auf drei Nachkommastellen gerundet.
+Berechne die Korrelation nach Bravais-Pearson für die Attribute Preis (Attribut 'Price') und Anzahl Übernachtungen (Attribut 'TotalNights'). Erstelle weiter ein Streudiagramm für 'Price' vs 'TotalNights' und integriere im Untertitel die Information der Anzahl Beobachtungen und der berechneten Korrelation auf drei Nachkommastellen gerundet.
 
 Hinweis: Verwende für deine Implementierung die Funktion `geom_jitter()` mit sinnvoller Wahl der Parameter `alpha` und `shape`.
 
 ```{r}
-sub <- paste('Observations: ', nrow(df_bookings),"| Correlation: ",round(cor(df_bookings$Price, df_bookings$TotalNights),3))
+sub <- paste('Observations: ', nrow(df_bookings), '| Correlation: ', round(cor(df_bookings$Price, df_bookings$TotalNights), 3))
 
-df_bookings %>% ggplot(aes(Price,TotalNights)) +
-  geom_jitter(aes(),alpha=0.2,shape=1) + 
+df_bookings %>% ggplot(aes(Price, TotalNights)) +
+  geom_jitter(aes(), alpha = 0.2, shape = 1) +
   labs(title = 'Correlation between Price and TotalNights', subtitle = sub)
 ```
 
 ## Aufgabe (10 Punkte): Bereinigung von Ausreissern
 
-Erstelle das obige Streudiagramm für "Price" vs "TotalNights" erneut und schränke die x-Achse und y-Achse so ein, dass Aussreisser am oberen Ende der Skala nicht gezeigt werden. Passe den Untertitel an, indem du erwähnst wieviele Ausreisser nicht gezeigt werden.
+Erstelle das obige Streudiagramm für 'Price' vs 'TotalNights' erneut und schränke die x-Achse und y-Achse so ein, dass Aussreisser am oberen Ende der Skala nicht gezeigt werden. Passe den Untertitel an, indem du erwähnst wieviele Ausreisser nicht gezeigt werden.
 
-Hinweis: Verwende für deine Implementierung die Definition des Boxplots: Ausreißer sind Datenpunkte, die sich ausserhalb der Zäune ("Whiskers") des Boxplots befinden. Die Whiskers haben die Länge des 1,5-fachen des Interquartilsbereichs und setzen oberhalb des oberen Quartils und unterhalb des unteren Quartils an.
+Hinweis: Verwende für deine Implementierung die Definition des Boxplots: Ausreißer sind Datenpunkte, die sich ausserhalb der Zäune ('Whiskers') des Boxplots befinden. Die Whiskers haben die Länge des 1,5-fachen des Interquartilsbereichs und setzen oberhalb des oberen Quartils und unterhalb des unteren Quartils an.
 
 ```{r}
-Q_price <- quantile(df_bookings$Price, probs=c(.25, .75), na.rm = FALSE)
+Q_price <- quantile(df_bookings$Price, probs = c(.25, .75), na.rm = FALSE)
 iqr_price <- IQR(df_bookings$Price)
-upper_range_price <-  Q_price[2]+1.5*iqr_price
-Q_total_nights <- quantile(df_bookings$TotalNights, probs=c(.25, .75), na.rm = FALSE)
+upper_range_price <- Q_price[2] + 1.5 * iqr_price
+Q_total_nights <- quantile(df_bookings$TotalNights, probs = c(.25, .75), na.rm = FALSE)
 iqr_total_nights <- IQR(df_bookings$TotalNights)
-upper_range_total_nights <- Q_total_nights[2]+1.5*iqr_total_nights
+upper_range_total_nights <- Q_total_nights[2] + 1.5 * iqr_total_nights
 
-#Count outliers
-count_outliers <- df_bookings %>% filter(Price >= upper_range_price | TotalNights >= upper_range_total_nights) %>% nrow()
+# Count outliers
+count_outliers <- df_bookings %>%
+  filter(Price >= upper_range_price | TotalNights >= upper_range_total_nights) %>%
+  nrow()
 
-sub2 <- paste('Observations: ', nrow(df_bookings) - count_outliers,"| Correlation: ",round(cor(df_bookings$Price, df_bookings$TotalNights),3), '| Removed outliers: ', count_outliers)
+sub2 <- paste('Observations: ', nrow(df_bookings) - count_outliers, '| Correlation: ', round(cor(df_bookings$Price, df_bookings$TotalNights), 3), '| Removed outliers: ', count_outliers)
 
 df_bookings %>% ggplot(aes(x = Price, y = TotalNights)) +
   geom_jitter(alpha = 0.2, shape = 1) +
   xlim(0, upper_range_price) +
   ylim(0, upper_range_total_nights) +
-  labs(title = "Correlation between Price and Total Nights", subtitle = sub2, x = 'Price [EURO]', y = 'Total Nights')
+  labs(title = 'Correlation between Price and Total Nights', subtitle = sub2, x = 'Price [EURO]', y = 'Total Nights')
 ```
 
 ## Aufgabe (10 Punkte): Untersuche den Zeitverlauf der Hotelankünfte
@@ -575,21 +676,24 @@ Visualisiere die Anzahl der Hotelbuchungen nach Ankunftsdatum im Zeitverlauf, wo
 Hinweis: Verwende für deine Implementierung `tidyverse` und `lubridate`.
 
 ```{r}
-df_bookings %>% filter(BookingCancelled == 'No') %>% ggplot(aes(x=ArrivalDate)) +
+df_bookings %>%
+  filter(BookingCancelled == 'No') %>%
+  ggplot(aes(x = ArrivalDate)) +
   geom_density() +
-  scale_x_date(date_labels = "%Y-%b", breaks = seq(as.Date("2016-06-01"), as.Date("2016-06-01")+180, "months"), limits = c(as.Date("2016-06-01"), c(as.Date("2016-06-01")+180)))+ theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5)) +
-  labs(title = "Density of arrivals over time", subtitle = 'Measured from 1.June - 28.November 2016', x = 'Date', y = 'Density')
+  scale_x_date(date_labels = '%Y-%b', breaks = seq(as.Date('2016-06-01'), as.Date('2016-06-01') + 180, 'months'), limits = c(as.Date('2016-06-01'), c(as.Date('2016-06-01') + 180))) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5)) +
+  labs(title = 'Density of arrivals over time', subtitle = 'Measured from 1.June - 28.November 2016', x = 'Date', y = 'Density')
 ```
 ```{r}
 df_bookings %>%
-  filter(BookingCancelled == "No") %>%
+  filter(BookingCancelled == 'No') %>%
   group_by(ArrivalDate) %>%
-  summarize(Freq=n()) %>% 
-  ggplot(aes(x=ArrivalDate, y = Freq)) +
+  summarize(Freq = n()) %>%
+  ggplot(aes(x = ArrivalDate, y = Freq)) +
   geom_line() +
-  scale_x_date(date_labels = "%Y-%b", breaks = seq(as.Date("2016-06-01"), as.Date("2016-06-01")+180, "months"), limits = c(as.Date("2016-06-01"), c(as.Date("2016-06-01")+180))) + 
+  scale_x_date(date_labels = '%Y-%b', breaks = seq(as.Date('2016-06-01'), as.Date('2016-06-01') + 180, 'months'), limits = c(as.Date('2016-06-01'), c(as.Date('2016-06-01') + 180))) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5)) +
-  labs(title = "Density of arrivals over time", subtitle = 'Measured from 1.June - 28.November 2016', x = 'Date', y = 'Density')
+  labs(title = 'Density of arrivals over time', subtitle = 'Measured from 1.June - 28.November 2016', x = 'Date', y = 'Density')
 ```
 
 ## Aufgabe (5 Punkte): Identifiziere Tage mit meisten Buchungen
@@ -598,7 +702,7 @@ Identifiziere die fünf Tage mit den meisten Zimmer-Buchungen gemessen am Datum 
 
 ```{r}
 df_bookings %>%
-  filter(BookingCancelled == "No") %>%
+  filter(BookingCancelled == 'No') %>%
   group_by(ArrivalDate) %>%
   summarize(Bookings = n(), 'Check-Ins' = sum(GroupSize)) %>%
   arrange(desc(Bookings)) %>%
@@ -606,21 +710,24 @@ df_bookings %>%
 ```
 ## Aufgabe (10 Punkte): Untersuche den Zeitverlauf des mittleren Tagesdurchschnittspreise der Buchungen
 
-Berechne für 2016 die zeitliche Entwicklung des Tagesdurchschnittspreises ("AverageDailyRate") aller Buchungen pro Woche. Visualisiere den Median sowie das 25%-Perzentil und 75%-Perzentil, um die Streuung des Tagesdurchschnittspreises zu illustrieren.
+Berechne für 2016 die zeitliche Entwicklung des Tagesdurchschnittspreises ('AverageDailyRate') aller Buchungen pro Woche. Visualisiere den Median sowie das 25%-Perzentil und 75%-Perzentil, um die Streuung des Tagesdurchschnittspreises zu illustrieren.
 
 Bestimme und markiere dann visuell die Kalenderwoche mit dem höchsten Tagesdurchschnittspreis mit Hilfe einer vertikalen roten Linie.
 
 ```{r}
-df_bookings %>% filter(ArrivalDate >= "2016-01-01" & ArrivalDate <= "2016-12-31") %>% group_by(week = week(ArrivalDate)) %>% summarise(mean_week = mean(AverageDailyRate)) %>% 
+df_bookings %>%
+  filter(ArrivalDate >= '2016-01-01' & ArrivalDate <= '2016-12-31') %>%
+  group_by(week = week(ArrivalDate)) %>%
+  summarise(mean_week = mean(AverageDailyRate)) %>%
   ggplot(aes(x = week, y = mean_week)) +
-  geom_area(fill="#69b3a2", alpha=0.4) +
-  geom_line(color="#69b3a2", size=2) +
-  geom_hline(aes(yintercept = quantile(mean_week)[2]), color="black", size=1) +
-  geom_hline(aes(yintercept = quantile(mean_week)[4]), color="black", size=1) +
+  geom_area(fill = '#69b3a2', alpha = 0.4) +
+  geom_line(color = '#69b3a2', size = 2) +
+  geom_hline(aes(yintercept = quantile(mean_week)[2]), color = 'black', size = 1) +
+  geom_hline(aes(yintercept = quantile(mean_week)[4]), color = 'black', size = 1) +
   geom_hline(aes(yintercept = median(mean_week))) +
-  geom_vline(aes(xintercept=week[mean_week == max(mean_week)]), color='red') +
+  geom_vline(aes(xintercept = week[mean_week == max(mean_week)]), color = 'red') +
   scale_x_continuous(breaks = seq(1, 53, 2)) +
-  labs(title = "Mean AverageDailyRate over time", subtitle = 'All weeks in 2016', x = 'Week', y = 'Mean of AverageDailyRate per week')
+  labs(title = 'Mean AverageDailyRate over time', subtitle = 'All weeks in 2016', x = 'Week', y = 'Mean of AverageDailyRate per week')
 ```
 # Eigene Analysen
 
@@ -629,18 +736,39 @@ df_bookings %>% filter(ArrivalDate >= "2016-01-01" & ArrivalDate <= "2016-12-31"
 Untersuche weitere, noch nicht beleuchtete Zusammenhänge in den Daten und dokumentiere (a) deine Hypothese, (b) die gefundenen Zusammenhängen präzise in Worten.
 
 ```{r}
+#Logan
+#Thema 1: IsRepeatedGuest && BookingCancelled Zusammenhänge // gleiches für PreviousCancellations
+#Hypothese 1: 
+#Analyse 1:
 
+#Noah
+#Thema 2: Umsatzanalyse
+#Hypothese 2:
+#Analyse 2:
+
+#Noah
+#Thema 3: Auswirkungen auf Preis
+#Hypothese 3:
+#Analyse 3:
+
+#Logan
+#Thema 4: DaysInWaitingList (inkl. Buchungsanalyse)
+#Hypothese 4:
+#Analyse 4:
 ```
 
 
-Ideen:
-- 
 ```{r}
 library(DataExplorer)
 temp <- df_bookings %>% select(AverageDailyRate, LeadTime)
 plot_correlation(temp)
 plot_histogram(df_bookings)
 
-ggplot(df_bookings, aes(x = AverageDailyRate, y = LeadTime)) + geom_point()
+ggplot(df_bookings, aes(x = AverageDailyRate, y = LeadTime)) +
+  geom_point()
+```
+```{r}
+
+```
 ```
 
